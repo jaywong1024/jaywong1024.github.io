@@ -1,0 +1,401 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><meta name="author" content="JayWong"><title>1.4.1.5【编程基础 - 数据库 - MySQL】锁与 MVCC · JayWong</title><meta name="description" content="一、 锁
+1.1 按模式分类乐观锁与悲观锁是对待线程竞争的态度，在 Java 语言和 MySQL 数据库中都有此概念的实际应用
+1.1.1 乐观锁1.1.1.1 概念乐观锁认为当前线程在使用资源的时候，不会（或者说极少有可能）有别的线程来修改资源，所以不会对资源加锁，只是在修改资源的时候，判断是否有"><meta name="keywords" content="Blog,JayWong,Hexo"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="renderer" content="webkit"><link rel="shortcut icon" type="image/x-icon" href="/images/java.jpeg"><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/blog_basic.css"><link rel="stylesheet" href="/css/font-awesome.min.css"><link rel="stylesheet" href="/css/insight.css"><link rel="stylesheet" href="/css/search.css"><link rel="alternate" type="application/atom+xml" title="ATOM 1.0" href="/atom.xml"><script src="/js/jquery.js"></script><meta name="generator" content="Hexo 4.2.1"></head><body><div class="page-top animated fadeInDown"><div class="nav"><li> <a href="/">Home</a></li><li> <a href="/archives">Archives</a></li><li> <a href="/tags">Tags</a></li><li> <a href="/about">About</a></li><li> <a href="/links">Links</a></li></div><div class="information"><div class="nav_right_btn"><li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li><li><a class="fa fa-search" onclick="openWindow();"></a></li></div><div class="avatar"><img src="/images/java.jpeg"></div></div></div><div class="sidebar animated fadeInDown"><div class="sidebar-top"><div class="logo-title"><div class="title"><img src="/images/themes/logo@2x.png" style="width:220px;" alt="favicon"><h3 title=""><a href="/">JayWong</a></h3><div class="description"><p>Programmer / Photographer</p></div></div><ul class="social-links"><li><a href="https://github.com/jaywong1024" target="_blank" rel="noopener"><i class="fa fa-github"></i></a></li></ul></div><details class="ltr" open><summary>Menu</summary><div class="tocmenu"><p><ol class="toclist"><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#一、-锁"><span class="toclist-number">1.</span> <span class="toclist-text">一、 锁</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-1-按模式分类"><span class="toclist-number">1.1.</span> <span class="toclist-text">1.1 按模式分类</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-1-1-乐观锁"><span class="toclist-number">1.1.1.</span> <span class="toclist-text">1.1.1 乐观锁</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-1-1-1-概念"><span class="toclist-number">1.1.1.1.</span> <span class="toclist-text">1.1.1.1 概念</span></a></li><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-1-1-2-应用场景"><span class="toclist-number">1.1.1.2.</span> <span class="toclist-text">1.1.1.2 应用场景</span></a></li><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-1-1-3-实现方式"><span class="toclist-number">1.1.1.3.</span> <span class="toclist-text">1.1.1.3 实现方式</span></a></li><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-1-1-4-示例"><span class="toclist-number">1.1.1.4.</span> <span class="toclist-text">1.1.1.4 示例</span></a></li></ol></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-1-2-悲观锁"><span class="toclist-number">1.1.2.</span> <span class="toclist-text">1.1.2 悲观锁</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-1-2-1-概念"><span class="toclist-number">1.1.2.1.</span> <span class="toclist-text">1.1.2.1 概念</span></a></li><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-1-2-2-应用场景"><span class="toclist-number">1.1.2.2.</span> <span class="toclist-text">1.1.2.2 应用场景</span></a></li><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-1-2-3-实现方式"><span class="toclist-number">1.1.2.3.</span> <span class="toclist-text">1.1.2.3 实现方式</span></a></li><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-1-2-4-示例"><span class="toclist-number">1.1.2.4.</span> <span class="toclist-text">1.1.2.4 示例</span></a></li></ol></li></ol></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-2-按粒度分类"><span class="toclist-number">1.2.</span> <span class="toclist-text">1.2 按粒度分类</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-2-1-全局锁"><span class="toclist-number">1.2.1.</span> <span class="toclist-text">1.2.1 全局锁</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-2-1-1-概念"><span class="toclist-number">1.2.1.1.</span> <span class="toclist-text">1.2.1.1 概念</span></a></li><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-2-1-2-应用场景"><span class="toclist-number">1.2.1.2.</span> <span class="toclist-text">1.2.1.2 应用场景</span></a></li><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-2-1-3-实现方式"><span class="toclist-number">1.2.1.3.</span> <span class="toclist-text">1.2.1.3 实现方式</span></a></li><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-2-1-4-示例"><span class="toclist-number">1.2.1.4.</span> <span class="toclist-text">1.2.1.4 示例</span></a></li></ol></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-2-2-表级锁"><span class="toclist-number">1.2.2.</span> <span class="toclist-text">1.2.2 表级锁</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-2-2-1-概念"><span class="toclist-number">1.2.2.1.</span> <span class="toclist-text">1.2.2.1 概念</span></a></li><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-2-2-2-实现方式"><span class="toclist-number">1.2.2.2.</span> <span class="toclist-text">1.2.2.2 实现方式</span></a></li><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-2-2-3-示例"><span class="toclist-number">1.2.2.3.</span> <span class="toclist-text">1.2.2.3 示例</span></a></li></ol></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-2-3-页级锁"><span class="toclist-number">1.2.3.</span> <span class="toclist-text">1.2.3 页级锁</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-2-3-1-概念"><span class="toclist-number">1.2.3.1.</span> <span class="toclist-text">1.2.3.1 概念</span></a></li></ol></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-2-4-行级锁"><span class="toclist-number">1.2.4.</span> <span class="toclist-text">1.2.4 行级锁</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-2-4-1-概念"><span class="toclist-number">1.2.4.1.</span> <span class="toclist-text">1.2.4.1 概念</span></a></li><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-2-4-2-实现方式"><span class="toclist-number">1.2.4.2.</span> <span class="toclist-text">1.2.4.2 实现方式</span></a></li><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-2-4-3-示例"><span class="toclist-number">1.2.4.3.</span> <span class="toclist-text">1.2.4.3 示例</span></a></li></ol></li></ol></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-3-按属性分类"><span class="toclist-number">1.3.</span> <span class="toclist-text">1.3 按属性分类</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-3-1-共享锁"><span class="toclist-number">1.3.1.</span> <span class="toclist-text">1.3.1 共享锁</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-3-1-1-概念"><span class="toclist-number">1.3.1.1.</span> <span class="toclist-text">1.3.1.1 概念</span></a></li><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-3-1-2-应用场景"><span class="toclist-number">1.3.1.2.</span> <span class="toclist-text">1.3.1.2 应用场景</span></a></li><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-3-1-3-实现方式"><span class="toclist-number">1.3.1.3.</span> <span class="toclist-text">1.3.1.3 实现方式</span></a></li><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-3-1-4-示例"><span class="toclist-number">1.3.1.4.</span> <span class="toclist-text">1.3.1.4 示例</span></a></li></ol></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-3-2-排他锁"><span class="toclist-number">1.3.2.</span> <span class="toclist-text">1.3.2 排他锁</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-3-2-1-概念"><span class="toclist-number">1.3.2.1.</span> <span class="toclist-text">1.3.2.1 概念</span></a></li><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-3-2-2-应用场景"><span class="toclist-number">1.3.2.2.</span> <span class="toclist-text">1.3.2.2 应用场景</span></a></li><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-3-2-3-实现方式"><span class="toclist-number">1.3.2.3.</span> <span class="toclist-text">1.3.2.3 实现方式</span></a></li><li class="toclist-item toclist-level-5"><a class="toclist-link" href="#1-3-2-4-示例"><span class="toclist-number">1.3.2.4.</span> <span class="toclist-text">1.3.2.4 示例</span></a></li></ol></li></ol></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-4-按状态分类"><span class="toclist-number">1.4.</span> <span class="toclist-text">1.4 按状态分类</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-4-1-意向锁概念"><span class="toclist-number">1.4.1.</span> <span class="toclist-text">1.4.1 意向锁概念</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-4-2-应用场景"><span class="toclist-number">1.4.2.</span> <span class="toclist-text">1.4.2 应用场景</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-4-1-3-示例"><span class="toclist-number">1.4.3.</span> <span class="toclist-text">1.4.1.3 示例</span></a></li></ol></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-5-按算法分类"><span class="toclist-number">1.5.</span> <span class="toclist-text">1.5 按算法分类</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-5-1-记录锁"><span class="toclist-number">1.5.1.</span> <span class="toclist-text">1.5.1 记录锁</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-5-2-间隙锁"><span class="toclist-number">1.5.2.</span> <span class="toclist-text">1.5.2 间隙锁</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-5-3-临键锁"><span class="toclist-number">1.5.3.</span> <span class="toclist-text">1.5.3 临键锁</span></a></li></ol></li></ol></li><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#二、MVCC"><span class="toclist-number">2.</span> <span class="toclist-text">二、MVCC</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#2-1-隐藏字段"><span class="toclist-number">2.1.</span> <span class="toclist-text">2.1 隐藏字段</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#2-2-undo-log"><span class="toclist-number">2.2.</span> <span class="toclist-text">2.2 undo log</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#2-2-1-undo-log-的作用"><span class="toclist-number">2.2.1.</span> <span class="toclist-text">2.2.1 undo log 的作用</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#2-2-2-insert-undo-log"><span class="toclist-number">2.2.2.</span> <span class="toclist-text">2.2.2 insert undo log</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#2-2-3-update-undo-log"><span class="toclist-number">2.2.3.</span> <span class="toclist-text">2.2.3 update undo log</span></a></li></ol></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#2-3-Read-View"><span class="toclist-number">2.3.</span> <span class="toclist-text">2.3 Read View</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#2-4-示例（RR）"><span class="toclist-number">2.4.</span> <span class="toclist-text">2.4 示例（RR）</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#2-5-RC-和-RR-的不同"><span class="toclist-number">2.5.</span> <span class="toclist-text">2.5 RC 和 RR 的不同</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#2-6-总结"><span class="toclist-number">2.6.</span> <span class="toclist-text">2.6 总结</span></a></li></ol></li></ol></p></div></details></div><div class="footer"><div class="p"> <span> CC-BY-SA-3.0 for the entire station </span><i class="fa fa-star"></i><span> JayWong</span></div><div class="by_farbox"><span>Powered by </span><a href="https://hexo.io/zh-cn/" target="_blank">Hexo </a><span> & </span><span>Anatolo </span></div><div class="beian"></div></div></div><div class="main"><div class="autopagerize_page_element"><div class="content"><div class="post-page"><div class="post animated fadeInDown"><div class="post-title"><h3><a>1.4.1.5【编程基础 - 数据库 - MySQL】锁与 MVCC</a></h3></div><div class="post-content"><p><h2 id="一、-锁"><a href="#一、-锁" class="headerlink" title="一、 锁"></a>一、 锁</h2><p><img src="https://raw.githubusercontent.com/jaywong1024/picgo/main/img/MySQL%20%E9%94%81.png" alt="MySQL 锁"></p>
+<h3 id="1-1-按模式分类"><a href="#1-1-按模式分类" class="headerlink" title="1.1 按模式分类"></a>1.1 按模式分类</h3><p>乐观锁与悲观锁是对待线程竞争的态度，在 Java 语言和 MySQL 数据库中都有此概念的实际应用</p>
+<h4 id="1-1-1-乐观锁"><a href="#1-1-1-乐观锁" class="headerlink" title="1.1.1 乐观锁"></a>1.1.1 乐观锁</h4><h5 id="1-1-1-1-概念"><a href="#1-1-1-1-概念" class="headerlink" title="1.1.1.1 概念"></a>1.1.1.1 概念</h5><p>乐观锁认为当前线程在使用资源的时候，不会（或者说极少有可能）有别的线程来修改资源，所以不会对资源加锁，只是在修改资源的时候，判断是否有其他线程修改了此资源</p>
+<h5 id="1-1-1-2-应用场景"><a href="#1-1-1-2-应用场景" class="headerlink" title="1.1.1.2 应用场景"></a>1.1.1.2 应用场景</h5><p>适用于读多写少的场景，因为在大量写的场景，冲突的可能性极大，业务层可能回不断地重试，十分影响系统性能</p>
+<h5 id="1-1-1-3-实现方式"><a href="#1-1-1-3-实现方式" class="headerlink" title="1.1.1.3 实现方式"></a>1.1.1.3 实现方式</h5><p>一般使用版本号机制实现，在表中增加一个数字类型 <code>version</code> 字段来实现，当更新数据的时候进行 <code>+1</code></p>
+<h5 id="1-1-1-4-示例"><a href="#1-1-1-4-示例" class="headerlink" title="1.1.1.4 示例"></a>1.1.1.4 示例</h5><p>// todo jay</p>
+<h4 id="1-1-2-悲观锁"><a href="#1-1-2-悲观锁" class="headerlink" title="1.1.2 悲观锁"></a>1.1.2 悲观锁</h4><h5 id="1-1-2-1-概念"><a href="#1-1-2-1-概念" class="headerlink" title="1.1.2.1 概念"></a>1.1.2.1 概念</h5><p>悲观锁认为当前线程在使用资源的时候，一定会有其他线程来修改资源，因此在获取资源时会先加锁，确保资源不会被其他线程修改</p>
+<h5 id="1-1-2-2-应用场景"><a href="#1-1-2-2-应用场景" class="headerlink" title="1.1.2.2 应用场景"></a>1.1.2.2 应用场景</h5><p>适用于并发量不大、写入操作比较频繁、数据一致性比较高的场景</p>
+<h5 id="1-1-2-3-实现方式"><a href="#1-1-2-3-实现方式" class="headerlink" title="1.1.2.3 实现方式"></a>1.1.2.3 实现方式</h5><p>在 MySQL 中使用悲观锁，需要关闭 MySQL 的自动提交。共享锁和排他锁是悲观锁的不同实现，也属于悲观锁的范畴</p>
+<h5 id="1-1-2-4-示例"><a href="#1-1-2-4-示例" class="headerlink" title="1.1.2.4 示例"></a>1.1.2.4 示例</h5><p>在 IDEA 的 Database 插件中，可以将事务修改为 Manual 手动模式，然后先执行 1，在执行 2</p>
+<p><img src="https://raw.githubusercontent.com/jaywong1024/picgo/main/img/image-20230313213629065.png" alt="image-20230313213629065"></p>
+<p>可以发现，console_1 会话，update 已经执行了 22s 都没好，最终打印如下，等待锁超时了</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">biz&gt; update goods <span class="built_in">set</span> price = 456 <span class="built_in">where</span> id = 1</span><br><span class="line">[2023-03-13 21:36:33] [40001][1205] Lock <span class="built_in">wait</span> timeout exceeded; try restarting transaction</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="1-2-按粒度分类"><a href="#1-2-按粒度分类" class="headerlink" title="1.2 按粒度分类"></a>1.2 按粒度分类</h3><h4 id="1-2-1-全局锁"><a href="#1-2-1-全局锁" class="headerlink" title="1.2.1 全局锁"></a>1.2.1 全局锁</h4><h5 id="1-2-1-1-概念"><a href="#1-2-1-1-概念" class="headerlink" title="1.2.1.1 概念"></a>1.2.1.1 概念</h5><p>全局锁就是对整个数据库加锁</p>
+<h5 id="1-2-1-2-应用场景"><a href="#1-2-1-2-应用场景" class="headerlink" title="1.2.1.2 应用场景"></a>1.2.1.2 应用场景</h5><p>全库逻辑备份（mysqldump）</p>
+<h5 id="1-2-1-3-实现方式"><a href="#1-2-1-3-实现方式" class="headerlink" title="1.2.1.3 实现方式"></a>1.2.1.3 实现方式</h5><p>// todo jay</p>
+<h5 id="1-2-1-4-示例"><a href="#1-2-1-4-示例" class="headerlink" title="1.2.1.4 示例"></a>1.2.1.4 示例</h5><h4 id="1-2-2-表级锁"><a href="#1-2-2-表级锁" class="headerlink" title="1.2.2 表级锁"></a>1.2.2 表级锁</h4><h5 id="1-2-2-1-概念"><a href="#1-2-2-1-概念" class="headerlink" title="1.2.2.1 概念"></a>1.2.2.1 概念</h5><p>对整张表进行加锁操作，MyISAM 与 InnoDB 都支持表级锁定</p>
+<p>MySQL 中表级锁有两种，一种是表锁，一种是元数据锁（Meta Data Lock，MDL）</p>
+<h5 id="1-2-2-2-实现方式"><a href="#1-2-2-2-实现方式" class="headerlink" title="1.2.2.2 实现方式"></a>1.2.2.2 实现方式</h5><ul>
+<li>表锁：使用 <code>lock tables ... read / write</code> 锁住表，<code>unlock tables</code> 释放锁<ul>
+<li>读锁 read：当前线程和其它线程只能读</li>
+<li>写锁 write：当前线程和其它线程读写都会阻塞</li>
+</ul>
+</li>
+<li>元数据锁：MDL 是隐式的，在 CRUD 时，自动加 MDL 读锁（共享），当修改表结构时，自动加 MDL 写锁（独占）</li>
+</ul>
+<h5 id="1-2-2-3-示例"><a href="#1-2-2-3-示例" class="headerlink" title="1.2.2.3 示例"></a>1.2.2.3 示例</h5><p>console 使用 <code>write</code> 写锁 锁住 <code>goods</code> 表，console_1 读取数据被阻塞</p>
+<p><img src="https://raw.githubusercontent.com/jaywong1024/picgo/main/img/image-20230313221441489.png" alt="image-20230313221441489"></p>
+<p>元数据锁，当 console_1 隐式获得 MDL 读锁时，console 修改表结构的操作需要获取 MDL 写锁被阻塞，console_2 被 console 阻塞了</p>
+<p><img src="https://raw.githubusercontent.com/jaywong1024/picgo/main/img/image-20230313222224499.png" alt="image-20230313222224499"></p>
+<p>解决方案</p>
+<ul>
+<li>避免长事务（长事务一般是应用层的锅）</li>
+<li>停止 DDL，或者 kill 长事务（谨慎操作）</li>
+</ul>
+<h4 id="1-2-3-页级锁"><a href="#1-2-3-页级锁" class="headerlink" title="1.2.3 页级锁"></a>1.2.3 页级锁</h4><h5 id="1-2-3-1-概念"><a href="#1-2-3-1-概念" class="headerlink" title="1.2.3.1 概念"></a>1.2.3.1 概念</h5><p>页级锁是 MySQL 中锁定粒度介于行级锁和表级锁中间的一种锁。表级锁速度快，但冲突多，行级冲突少，但速度慢。因此，采取了折衷的页级锁，一次锁定相邻的一组记录。BDB 引擎支持页级锁</p>
+<h4 id="1-2-4-行级锁"><a href="#1-2-4-行级锁" class="headerlink" title="1.2.4 行级锁"></a>1.2.4 行级锁</h4><h5 id="1-2-4-1-概念"><a href="#1-2-4-1-概念" class="headerlink" title="1.2.4.1 概念"></a>1.2.4.1 概念</h5><p>行级锁是粒度最低的锁，发生锁冲突的概率也最低、并发度最高。但是加锁慢、开销大，容易发生死锁现象</p>
+<h5 id="1-2-4-2-实现方式"><a href="#1-2-4-2-实现方式" class="headerlink" title="1.2.4.2 实现方式"></a>1.2.4.2 实现方式</h5><p>在 MySQL 中，行级锁并不是直接锁记录，而是锁索引。索引分为 <strong>主键索引</strong> 和 <strong>非主键索引</strong> 两种，如果一条 SQL 语句操作了主键索引，MySQL 就会锁定这条主键索引。如果一条语句操作了非主键索引，MySQL会先锁定该非主键索引，再锁定相关的主键索引</p>
+<p>在 UPDATE、DELETE 操作时，MySQL 不仅锁定 WHERE 条件扫描过的所有索引记录，而且会锁定相邻的键值，即所谓的 <strong>next-key locking</strong>（最下面临键锁有示例）</p>
+<h5 id="1-2-4-3-示例"><a href="#1-2-4-3-示例" class="headerlink" title="1.2.4.3 示例"></a>1.2.4.3 示例</h5><p>console 执行 update 锁住了 id=1 和 id=2 的数据，console_1 更新 id=2 的数据失败，console_2 更新 id=3 的数据成功</p>
+<p><img src="https://raw.githubusercontent.com/jaywong1024/picgo/main/img/image-20230313224034638.png" alt="image-20230313224034638"></p>
+<h3 id="1-3-按属性分类"><a href="#1-3-按属性分类" class="headerlink" title="1.3 按属性分类"></a>1.3 按属性分类</h3><h4 id="1-3-1-共享锁"><a href="#1-3-1-共享锁" class="headerlink" title="1.3.1 共享锁"></a>1.3.1 共享锁</h4><h5 id="1-3-1-1-概念"><a href="#1-3-1-1-概念" class="headerlink" title="1.3.1.1 概念"></a>1.3.1.1 概念</h5><p>共享锁，又称之为读锁，简称 S 锁，当事务 A 对数据加上读锁后，其他事务只能对该数据加读锁，不能做任何修改操作，也就是不能添加写锁。只有当事务 A 上的读锁被释放后，其他事务才能对其添加写锁</p>
+<h5 id="1-3-1-2-应用场景"><a href="#1-3-1-2-应用场景" class="headerlink" title="1.3.1.2 应用场景"></a>1.3.1.2 应用场景</h5><p>共享锁主要是为了支持并发的读取数据而出现的，读取数据时，不允许其他事务对当前数据进行修改操作，从而避免 <strong>不可重读</strong> 的问题的出现</p>
+<h5 id="1-3-1-3-实现方式"><a href="#1-3-1-3-实现方式" class="headerlink" title="1.3.1.3 实现方式"></a>1.3.1.3 实现方式</h5><p><code>select ... lock in share mode</code></p>
+<h5 id="1-3-1-4-示例"><a href="#1-3-1-4-示例" class="headerlink" title="1.3.1.4 示例"></a>1.3.1.4 示例</h5><p>console 查询 id=1 的数据并加 S 锁，console_1 添加写锁失败，更新数据阻塞，console_2 更新数据成功</p>
+<p><img src="https://raw.githubusercontent.com/jaywong1024/picgo/main/img/image-20230313230111538.png" alt="image-20230313230111538"></p>
+<h4 id="1-3-2-排他锁"><a href="#1-3-2-排他锁" class="headerlink" title="1.3.2 排他锁"></a>1.3.2 排他锁</h4><h5 id="1-3-2-1-概念"><a href="#1-3-2-1-概念" class="headerlink" title="1.3.2.1 概念"></a>1.3.2.1 概念</h5><p>排它锁，又称之为写锁，简称 X 锁，当事务对数据加上写锁后，其他事务既不能对该数据添加读写，也不能对该数据添加写锁，写锁与其他锁都是互斥的。只有当前数据写锁被释放后，其他事务才能对其添加写锁或者是读锁</p>
+<h5 id="1-3-2-2-应用场景"><a href="#1-3-2-2-应用场景" class="headerlink" title="1.3.2.2 应用场景"></a>1.3.2.2 应用场景</h5><p>写锁主要是为了解决在修改数据时，不允许其他事务对当前数据进行修改和读取操作，从而可以有效避免 <strong>脏读</strong></p>
+<h5 id="1-3-2-3-实现方式"><a href="#1-3-2-3-实现方式" class="headerlink" title="1.3.2.3 实现方式"></a>1.3.2.3 实现方式</h5><p><code>select ... for update</code></p>
+<h5 id="1-3-2-4-示例"><a href="#1-3-2-4-示例" class="headerlink" title="1.3.2.4 示例"></a>1.3.2.4 示例</h5><p>console 对 id=1 添加写锁，console_1 获取写锁失败，console_2 获取写锁成功</p>
+<p><img src="https://raw.githubusercontent.com/jaywong1024/picgo/main/img/image-20230313230534388.png" alt="image-20230313230534388"></p>
+<h3 id="1-4-按状态分类"><a href="#1-4-按状态分类" class="headerlink" title="1.4 按状态分类"></a>1.4 按状态分类</h3><h4 id="1-4-1-意向锁概念"><a href="#1-4-1-意向锁概念" class="headerlink" title="1.4.1 意向锁概念"></a>1.4.1 意向锁概念</h4><ul>
+<li><strong>意向共享锁（Intention Shared Lock，IS 锁）</strong>：事务有意向对表中的某些记录加共享锁（S 锁），加共享锁前必须先取得该表的 IS 锁</li>
+<li><strong>意向排他锁（Intention Exclusive Lock，IX 锁）</strong>：事务有意向对表中的某些记录加排他锁（X 锁），加排他锁之前必须先取得该表的 IX 锁</li>
+</ul>
+<h4 id="1-4-2-应用场景"><a href="#1-4-2-应用场景" class="headerlink" title="1.4.2 应用场景"></a>1.4.2 应用场景</h4><p>如果需要用到表锁的话，如何判断表中的记录没有行锁呢，一行一行遍历肯定是不行，性能太差。我们需要用到一个叫做意向锁的东西，它记录着表的状态（意向），可以快速判断是否可以对某个表使用表锁</p>
+<p>意向锁之间是互相兼容的</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>IS 锁</th>
+<th>IX 锁</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>IS 锁</td>
+<td>兼容</td>
+<td>兼容</td>
+</tr>
+<tr>
+<td>IX 锁</td>
+<td>兼容</td>
+<td>兼容</td>
+</tr>
+</tbody></table>
+<p><strong>意向锁</strong> 与 <strong>共享锁和排它锁</strong> 互斥（这里指的是表级别的共享锁和排他锁，意向锁不会与行级的共享锁和排他锁互斥）</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>IS 锁</th>
+<th>IX 锁</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>S 锁</td>
+<td>兼容</td>
+<td>互斥</td>
+</tr>
+<tr>
+<td>X 锁</td>
+<td>互斥</td>
+<td>互斥</td>
+</tr>
+</tbody></table>
+<h4 id="1-4-1-3-示例"><a href="#1-4-1-3-示例" class="headerlink" title="1.4.1.3 示例"></a>1.4.1.3 示例</h4><p>console 执行且不提交的情况下，<code>goods</code> 表存在两把锁，意向排他锁和排他锁。console_1 执行 <code>lock</code> 想获取表 S 锁时，发现 <code>goods</code> 存在意向排他锁，根据上表 S 锁和 IX 锁互斥，console_1 阻塞</p>
+<p><img src="https://raw.githubusercontent.com/jaywong1024/picgo/main/img/image-20230313234614226.png" alt="image-20230313234614226"></p>
+<h3 id="1-5-按算法分类"><a href="#1-5-按算法分类" class="headerlink" title="1.5 按算法分类"></a>1.5 按算法分类</h3><p>记录锁、间隙锁、临键锁都是排它锁，而记录锁的使用方法跟排它锁介绍一致</p>
+<h4 id="1-5-1-记录锁"><a href="#1-5-1-记录锁" class="headerlink" title="1.5.1 记录锁"></a>1.5.1 记录锁</h4><p>记录锁是封锁记录，记录锁也叫行锁，例如 <code>select * from goods where id = 1 for update;</code>，它会在 id=1 的记录上加上记录锁，以阻止其他事务插入，更新，删除 id=1 这一行</p>
+<h4 id="1-5-2-间隙锁"><a href="#1-5-2-间隙锁" class="headerlink" title="1.5.2 间隙锁"></a>1.5.2 间隙锁</h4><p>使用间隙锁锁住的是一个区间，而不仅仅是这个区间中的每一条数据，例如使用 <code>select * from goods where id between 1 and 999 for update;</code> 就可以锁住 id 为 1~999 的数据</p>
+<p><img src="https://raw.githubusercontent.com/jaywong1024/picgo/main/img/image-20230313235620968.png" alt="image-20230313235620968"></p>
+<h4 id="1-5-3-临键锁"><a href="#1-5-3-临键锁" class="headerlink" title="1.5.3 临键锁"></a>1.5.3 临键锁</h4><p>临键锁，是记录锁与间隙锁的组合，它的封锁范围，既包含索引记录，又包含索引区间，是一个左闭右开区间。临键锁的主要目的，也是为了避免幻读。如果把事务的隔离级别降级为 <strong>读已提交</strong>，临键锁则也会失效</p>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>name</th>
+<th>desc</th>
+<th>price</th>
+<th>status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>基尼</td>
+<td>太美</td>
+<td>74</td>
+<td>1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>盖亚！~</td>
+<td>盖亚！</td>
+<td>77</td>
+<td>1</td>
+</tr>
+<tr>
+<td>3</td>
+<td>呀哈哈</td>
+<td>林克</td>
+<td>79</td>
+<td>1</td>
+</tr>
+</tbody></table>
+<p>例如上面的数据，<code>price</code> 字段加了普通索引，执行 <code>update goods set name = &#39;只因你~&#39; where price = 77;</code> 时，将会产生隐藏的临键锁：[74,  79)</p>
+<p>可以看到下面的执行结果，console_3 添加 price=75 成功，console_1 和 console_2 都失败了</p>
+<p><img src="https://raw.githubusercontent.com/jaywong1024/picgo/main/img/image-20230314003528088.png" alt="image-20230314003528088"></p>
+<h2 id="二、MVCC"><a href="#二、MVCC" class="headerlink" title="二、MVCC"></a>二、MVCC</h2><p><strong>MVCC</strong> 是多版本并发控制方法，即对一份数据会存储多个版本，通过事务的可见性来保证事务能看到自己应该看到的版本。通常会有一个全局的版本分配器来为每一行数据设置版本号，版本号是唯一的</p>
+<p>MVCC 依赖 <strong>隐藏字段、Read View、undo log</strong> 实现。InnoDB 通过数据行的 <code>DB_TRX_ID</code>  和 <code>Read View</code> 来判断数据的可见性，如不可见，则根据数据行的 <code>DP_ROLL_PTR</code> 找到 undo log 中的历史版本</p>
+<h3 id="2-1-隐藏字段"><a href="#2-1-隐藏字段" class="headerlink" title="2.1 隐藏字段"></a>2.1 隐藏字段</h3><p>在内部，InnoDB 存储引擎为每行数据添加了三个 隐藏字段</p>
+<ul>
+<li><strong>DB_TRX_ID（6字节）：</strong>表示最后一次插入或更新该行的事务 id。此外，<code>delete</code> 操作在内部被视为更新，只不过会在记录头 <code>Record header</code> 中的 <code>deleted_flag</code> 字段将其标记为已删除</li>
+<li><strong>DB_ROLL_PTR（7字节）：</strong>回滚指针，指向该行的  undo log（如果该行未被更新，则为空）</li>
+<li><strong>DB_ROW_ID（6字节）：</strong>如果没有设置主键且该表没有唯一非空索引时，InnoDB 会使用该 id 来生成聚簇索引</li>
+</ul>
+<h3 id="2-2-undo-log"><a href="#2-2-undo-log" class="headerlink" title="2.2 undo log"></a>2.2 undo log</h3><h4 id="2-2-1-undo-log-的作用"><a href="#2-2-1-undo-log-的作用" class="headerlink" title="2.2.1 undo log 的作用"></a>2.2.1 undo log 的作用</h4><ul>
+<li>当事务回滚时用于将数据恢复到修改前的样子</li>
+<li>另一个作用是 MVCC，当读取记录时，若该记录被其他事务占用或当前版本对该事务不可见，则可以通过 undo log 读取之前的版本数据，以此实现非锁定读</li>
+</ul>
+<p><strong>在 InnoDB 存储引擎中 undo log 分为两种：insert undo log 和 update undo log</strong></p>
+<h4 id="2-2-2-insert-undo-log"><a href="#2-2-2-insert-undo-log" class="headerlink" title="2.2.2 insert undo log"></a>2.2.2 insert undo log</h4><p>insert undo log 指的是在 insert 操作中产生的 undo log。insert 操作的记录只对当前事务可见，对其他事务不可见，所以在当前事务提交后，insert undo log 可以直接删除</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">insert into test(id, ver) values(1, 1);</span><br></pre></td></tr></table></figure>
+
+<p>例如执行以上新增语句，向 test 查询数据，会产生以下 undo log，在事务结束后直接删除。MEM_INDEX 是内存地址（个人假设的，方便理解）</p>
+<table>
+<thead>
+<tr>
+<th>MEM_INDEX</th>
+<th>DB_TRX_ID</th>
+<th>DB_ROLL_PTR</th>
+<th>id</th>
+<th>ver</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0x001</td>
+<td>1</td>
+<td></td>
+<td>1</td>
+<td>1</td>
+</tr>
+</tbody></table>
+<h4 id="2-2-3-update-undo-log"><a href="#2-2-3-update-undo-log" class="headerlink" title="2.2.3 update undo log"></a>2.2.3 update undo log</h4><p>insert undo log 指的是在 update/delete 操作中产生的 undo log，当事务 rollback 时，找到 undo log 中的记录进行回滚。如当前版本对其他事务不可见，可以通过 undo log 读取之前的版本</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">update test set ver &#x3D; ver + 1 where id &#x3D; 1;</span><br></pre></td></tr></table></figure>
+
+<p>假设上述新增已成功提交，test 表包含 <code>id=1,ver=1</code> 的数据，分别开启 3 个事务，执行以上更新语句 3 次并提交事务，此时 test 表的数据和 undo log 如下</p>
+<table>
+<thead>
+<tr>
+<th>DB_TRX_ID</th>
+<th>DB_ROLL_PTR</th>
+<th>id</th>
+<th>ver</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>4</td>
+<td>0x003</td>
+<td>1</td>
+<td>4</td>
+</tr>
+</tbody></table>
+<p>表中隐藏字段 <strong>DB_ROLL_PTR</strong> 指向 undo log 链表的头结点</p>
+<table>
+<thead>
+<tr>
+<th>MEM_INDEX</th>
+<th>DB_TRX_ID</th>
+<th>DB_ROLL_PTR</th>
+<th>id</th>
+<th>ver</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0x003</td>
+<td>3</td>
+<td>0x002</td>
+<td>1</td>
+<td>3</td>
+</tr>
+<tr>
+<td>0x002</td>
+<td>2</td>
+<td>0x001</td>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr>
+<td>0x001</td>
+<td>1</td>
+<td></td>
+<td>1</td>
+<td>1</td>
+</tr>
+</tbody></table>
+<h3 id="2-3-Read-View"><a href="#2-3-Read-View" class="headerlink" title="2.3 Read View"></a>2.3 Read View</h3><p>MVCC 只在 <strong>读已提交（RC）</strong> 和 <strong>可重复读（RR）</strong> 两个隔离级别下工作，而 RC 和 RR 的区别就在于它们生成 ReadView的策略不同。对于使用 RR 和 RC 隔离级别的事务来说，都必须保证读到已经提交了的事务修改过的记录，也就是说假如另一个事务已经修改了记录但是尚未提交，是不能直接读取最新版本的记录的</p>
+<p>核心问题就是：<strong>需要判断一下，版本链中的哪个版本是当前事务可见的</strong></p>
+<p>为此，InnoDB 提出了一个 ReadView 的概念，这个 ReadView 中有个 id 列表 <code>trx_ids</code> 来存储系统中当前活跃着的读写事务，也就是 begin 了还未 commit 或 rollback 的事务</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ReadView</span> &#123;</span></span><br><span class="line">  <span class="comment">/* ... */</span></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">  <span class="keyword">trx_id_t</span> m_low_limit_id;      <span class="comment">/* 大于等于这个 ID 的事务均不可见 */</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">trx_id_t</span> m_up_limit_id;       <span class="comment">/* 小于这个 ID 的事务均可见 */</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">trx_id_t</span> m_creator_trx_id;    <span class="comment">/* 创建该 Read View 的事务ID */</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">trx_id_t</span> m_low_limit_no;      <span class="comment">/* 事务 Number, 小于该 Number 的 Undo Logs 均可以被 Purge */</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">ids_t</span> m_ids;                  <span class="comment">/* 创建 Read View 时的活跃事务列表 */</span></span><br><span class="line"></span><br><span class="line">  m_closed;                     <span class="comment">/* 标记 Read View 是否 close */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-4-示例（RR）"><a href="#2-4-示例（RR）" class="headerlink" title="2.4 示例（RR）"></a>2.4 示例（RR）</h3><p>继续用之前的例子来理解一下 ReadView（在 RR 中 select 只会创建一个 Read View） 和 <code>trx_ids</code>。test 表包含 <code>id=1,ver=4</code> 的数据，上次修改它的事务 id 为 4。假设开启两个新事务来执行以下 SQL 语句</p>
+<table>
+<thead>
+<tr>
+<th>NO</th>
+<th>事务 5</th>
+<th>事务 6</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>begin</code></td>
+<td><code>begin</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>select * from test where id = 1</code></td>
+<td></td>
+</tr>
+<tr>
+<td>3</td>
+<td></td>
+<td><code>update test set ver = ver + 1 where id = 1</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>select * from test where id = 1</code></td>
+<td></td>
+</tr>
+<tr>
+<td>5</td>
+<td></td>
+<td><code>commit</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>select * from test where id = 1</code></td>
+<td></td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>commit</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<p>当事务 5 执行到步骤 2 时，事务 5 执行了查询语句，查出数据为 <code>id=1,ver=4</code>，事务 6 未执行任何操作，此时表数据和 undo log 如下，与之前没什么变化</p>
+<table>
+<thead>
+<tr>
+<th>DB_TRX_ID</th>
+<th>DB_ROLL_PTR</th>
+<th>id</th>
+<th>ver</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>4</td>
+<td>0x003</td>
+<td>1</td>
+<td>4</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>MEM_INDEX</th>
+<th>DB_TRX_ID</th>
+<th>DB_ROLL_PTR</th>
+<th>id</th>
+<th>ver</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0x003</td>
+<td>3</td>
+<td>0x002</td>
+<td>1</td>
+<td>3</td>
+</tr>
+<tr>
+<td>0x002</td>
+<td>2</td>
+<td>0x001</td>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr>
+<td>0x001</td>
+<td>1</td>
+<td></td>
+<td>1</td>
+<td>1</td>
+</tr>
+</tbody></table>
+<p>当事务 5 执行到步骤 4 时，事务 6 执行了更新语句，未提交事务。由于 RR 是可重复读，事务 5 只会读取在它开启之前就已经提事务交的数据，所以事务 5 会查看自己的 ReadView，然后从 undo log 中找到对应的快照。表数据和 undo log 如下</p>
+<table>
+<thead>
+<tr>
+<th>DB_TRX_ID</th>
+<th>DB_ROLL_PTR</th>
+<th>id</th>
+<th>ver</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>6</td>
+<td>0x004</td>
+<td>1</td>
+<td>5</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>MEM_INDEX</th>
+<th>DB_TRX_ID</th>
+<th>DB_ROLL_PTR</th>
+<th>id</th>
+<th>ver</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0x004</td>
+<td>4</td>
+<td>0x003</td>
+<td>1</td>
+<td>4</td>
+</tr>
+<tr>
+<td>0x003</td>
+<td>3</td>
+<td>0x002</td>
+<td>1</td>
+<td>3</td>
+</tr>
+<tr>
+<td>0x002</td>
+<td>2</td>
+<td>0x001</td>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr>
+<td>0x001</td>
+<td>1</td>
+<td></td>
+<td>1</td>
+<td>1</td>
+</tr>
+</tbody></table>
+<p>当事务 5 执行到步骤 6 时，表数据和 undo log，即使事务 6 已经提交了，根据可重复度级别，事务 5 会查看自己的 ReadView，然后从 undo log 中找到对应的快照</p>
+<h3 id="2-5-RC-和-RR-的不同"><a href="#2-5-RC-和-RR-的不同" class="headerlink" title="2.5 RC 和 RR 的不同"></a>2.5 RC 和 RR 的不同</h3><p>在 MVCC 中最大的不同就是它们生成 Read View 的时机</p>
+<ul>
+<li>在 RC 隔离级别下的 <strong>每次 select</strong> 查询前都生成一个 Read View</li>
+<li>在 RR 隔离级别下只在事务开始后 <strong>第一次 select</strong> 数据前生成一个 Read View</li>
+</ul>
+<p>如果上面的示例使用的是 RC，那么步骤 2，4 和 6 都会生成一个 Read View</p>
+<ul>
+<li>执行步骤 4 时，因为事务 6 未提交所以不可读，在 undo log 中寻找快照返回</li>
+<li>执行步骤 6 时，事务 6 已提交了数据，因为 RC 在每次 select 都会生成一个 Read View，所以会读取到事务 6 已提交的数据 <code>id=1,ver=5</code></li>
+</ul>
+<h3 id="2-6-总结"><a href="#2-6-总结" class="headerlink" title="2.6 总结"></a>2.6 总结</h3><p>从上面的讲解和示例中可以看处，MVCC（Multi-Version Concurrency Control，多版本并发控制）指的就是在使用 RC 和 RR 两种隔离级别中，在执行普通的 select 语句时，访问记录的版本链（undo log）的过程</p>
+<p>这样子可以使不同事务的 读写、写读 操作并发执行，从而提升系统性能</p>
+<p>RC 和 RR 两种隔离级别最大的不同就是生成 Read View 的时机</p>
+</p></div><div class="post-footer"><div class="meta"><div class="info"><i class="fa fa-sun-o"></i><span class="date">2023-03-04</span><a class="tag" href="/categories/MVCC/" title="MVCC">MVCC </a><i class="fa fa-tag"></i><a class="tag" href="/tags/【MySQL】/" title="【MySQL】">【MySQL】 </a><span class="leancloud_visitors"></span><span>About 3941 words, 13 min 8 sec  read</span></div></div></div></div><div class="share"><div class="evernote"><a class="fa fa-bookmark" href="" onclick="javascript:join_favorite()" ref="sidebar"></a></div><div class="weibo"><a class="fa fa-weibo" href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));"></a></div><div class="twitter"><a class="fa fa-twitter" href="http://twitter.com/home?status=,http://yoursite.com/2023/03/04/1.编程基础/1.4 数据库/1.4.1 MySQL/1.4.1.5 锁与 MVCC/,JayWong,1.4.1.5【编程基础 - 数据库 - MySQL】锁与 MVCC,;" target="_blank" rel="noopener"></a></div></div><div class="pagination"><ul class="clearfix"><li class="pre pagbuttons"><a class="btn" role="navigation" href="/2023/03/05/1.%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/1.4%20%E6%95%B0%E6%8D%AE%E5%BA%93/1.4.2%20Redis/1.4.2.1%20%E5%9F%BA%E7%A1%80/" title="1.4.2.1【编程基础 - 数据库 - Redis】基础">Previous</a></li><li class="next pagbuttons"><a class="btn" role="navigation" href="/2023/03/03/1.%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/1.4%20%E6%95%B0%E6%8D%AE%E5%BA%93/1.4.1%20MySQL/1.4.1.4%20%E7%B4%A2%E5%BC%95/" title="1.4.1.4【编程基础 - 数据库 - MySQL】索引">Next</a></li></ul></div><script src="/js/visitors.js"></script></div></div></div></div><script src="/js/jquery-migrate-1.2.1.min.js"></script><script src="/js/jquery.appear.js"></script><script src="/js/add-bookmark.js"></script><script>(function(window){var INSIGHT_CONFIG={TRANSLATION:{POSTS:"Posts",PAGES:"Pages",CATEGORIES:"Categories",TAGS:"Tags",UNTITLED:"(Untitled)",},CONTENT_URL:"/content.json",};window.INSIGHT_CONFIG=INSIGHT_CONFIG})(window);</script><script src="/js/insight.js" defer></script><div class="searchbox ins-search"><div class="searchbox-container ins-search-container"><div class="searchbox-input-wrapper"><input class="searchbox-input ins-search-input" type="text" placeholder="Search..."><span class="searchbox-close"><a class="fa fa-times-circle" onclick="closeWindow();"></a></span></div><div class="searchbox-result-wrapper ins-section-wrapper"><div class="ins-section-container"><p>Seraching...</p></div></div></div></div></body></html>

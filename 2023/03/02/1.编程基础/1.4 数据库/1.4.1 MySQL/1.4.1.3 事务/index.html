@@ -1,0 +1,183 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><meta name="author" content="JayWong"><title>1.4.1.3【编程基础 - 数据库 - MySQL】事务 · JayWong</title><meta name="description" content="一、概述1.1 数据库事务大多数情况下，我们在谈论事务的时候，如果没有特指 分布式事务，往往指的就是 数据库事务。数据库事务在我们日常开发中接触的最多了
+那数据库事务有什么作用呢？
+简单来说，数据库事务可以保证多个对数据库的操作（也就是 SQL 语句）构成一个逻辑上的整体。构成这个逻辑上的整体的这些"><meta name="keywords" content="Blog,JayWong,Hexo"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="renderer" content="webkit"><link rel="shortcut icon" type="image/x-icon" href="/images/java.jpeg"><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/blog_basic.css"><link rel="stylesheet" href="/css/font-awesome.min.css"><link rel="stylesheet" href="/css/insight.css"><link rel="stylesheet" href="/css/search.css"><link rel="alternate" type="application/atom+xml" title="ATOM 1.0" href="/atom.xml"><script src="/js/jquery.js"></script><meta name="generator" content="Hexo 4.2.1"></head><body><div class="page-top animated fadeInDown"><div class="nav"><li> <a href="/">Home</a></li><li> <a href="/archives">Archives</a></li><li> <a href="/tags">Tags</a></li><li> <a href="/about">About</a></li><li> <a href="/links">Links</a></li></div><div class="information"><div class="nav_right_btn"><li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li><li><a class="fa fa-search" onclick="openWindow();"></a></li></div><div class="avatar"><img src="/images/java.jpeg"></div></div></div><div class="sidebar animated fadeInDown"><div class="sidebar-top"><div class="logo-title"><div class="title"><img src="/images/themes/logo@2x.png" style="width:220px;" alt="favicon"><h3 title=""><a href="/">JayWong</a></h3><div class="description"><p>Programmer / Photographer</p></div></div><ul class="social-links"><li><a href="https://github.com/jaywong1024" target="_blank" rel="noopener"><i class="fa fa-github"></i></a></li></ul></div><details class="ltr" open><summary>Menu</summary><div class="tocmenu"><p><ol class="toclist"><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#一、概述"><span class="toclist-number">1.</span> <span class="toclist-text">一、概述</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-1-数据库事务"><span class="toclist-number">1.1.</span> <span class="toclist-text">1.1 数据库事务</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-2-事务特性"><span class="toclist-number">1.2.</span> <span class="toclist-text">1.2 事务特性</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-3-并发事务问题"><span class="toclist-number">1.3.</span> <span class="toclist-text">1.3 并发事务问题</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-3-1-脏读（Dirty-read）"><span class="toclist-number">1.3.1.</span> <span class="toclist-text">1.3.1 脏读（Dirty read）</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-3-2-丢失修改（Lost-to-modify）"><span class="toclist-number">1.3.2.</span> <span class="toclist-text">1.3.2 丢失修改（Lost to modify）</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-3-3-不可重复读（Unrepeatable-read）"><span class="toclist-number">1.3.3.</span> <span class="toclist-text">1.3.3 不可重复读（Unrepeatable read）</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-3-4-幻读（Phantom-read）"><span class="toclist-number">1.3.4.</span> <span class="toclist-text">1.3.4 幻读（Phantom read）</span></a></li></ol></li></ol></li><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#二、并发事务控制方式"><span class="toclist-number">2.</span> <span class="toclist-text">二、并发事务控制方式</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#2-1-锁"><span class="toclist-number">2.1.</span> <span class="toclist-text">2.1 锁</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#2-2-MVCC"><span class="toclist-number">2.2.</span> <span class="toclist-text">2.2 MVCC</span></a></li></ol></li><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#三、事务级别"><span class="toclist-number">3.</span> <span class="toclist-text">三、事务级别</span></a></li></ol></p></div></details></div><div class="footer"><div class="p"> <span> CC-BY-SA-3.0 for the entire station </span><i class="fa fa-star"></i><span> JayWong</span></div><div class="by_farbox"><span>Powered by </span><a href="https://hexo.io/zh-cn/" target="_blank">Hexo </a><span> & </span><span>Anatolo </span></div><div class="beian"></div></div></div><div class="main"><div class="autopagerize_page_element"><div class="content"><div class="post-page"><div class="post animated fadeInDown"><div class="post-title"><h3><a>1.4.1.3【编程基础 - 数据库 - MySQL】事务</a></h3></div><div class="post-content"><p><h2 id="一、概述"><a href="#一、概述" class="headerlink" title="一、概述"></a>一、概述</h2><h3 id="1-1-数据库事务"><a href="#1-1-数据库事务" class="headerlink" title="1.1 数据库事务"></a>1.1 数据库事务</h3><p>大多数情况下，我们在谈论事务的时候，如果没有特指 <strong>分布式事务</strong>，往往指的就是 <strong>数据库事务</strong>。数据库事务在我们日常开发中接触的最多了</p>
+<p><strong>那数据库事务有什么作用呢？</strong></p>
+<p>简单来说，数据库事务可以保证多个对数据库的操作（也就是 SQL 语句）构成一个逻辑上的整体。构成这个逻辑上的整体的这些数据库操作遵循：<strong>要么全部执行成功，要么全部不执行</strong> </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># 开启一个事务</span><br><span class="line">start transaction;</span><br><span class="line"># 多条 SQL 语句</span><br><span class="line">sql1, sql2, ...</span><br><span class="line">## 提交事务</span><br><span class="line">commit;</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-2-事务特性"><a href="#1-2-事务特性" class="headerlink" title="1.2 事务特性"></a>1.2 事务特性</h3><p>关系型数据库都有 ACID 特性，<strong>只有保证了事务的持久性、原子性、隔离性之后，一致性才能得到保障。也就是说 A、I、D 是手段，C 是目的</strong></p>
+<ul>
+<li><strong>原子性</strong>（<code>Atomicity</code>） ：事务是最小的执行单位，不允许分割。事务的原子性确保动作要么全部完成，要么完全不起作用</li>
+<li><strong>一致性</strong>（<code>Consistency</code>）：执行事务前后，数据保持一致，例如转账业务中，无论事务是否成功，转账者和收款人的总额应该是不变的</li>
+<li><strong>隔离性</strong>（<code>Isolation</code>）：并发访问数据库时，一个用户的事务不被其他事务所干扰，各并发事务之间数据库是独立的</li>
+<li><strong>持久性</strong>（<code>Durability</code>）：一个事务被提交之后。它对数据库中数据的改变是持久的，即使数据库发生故障也不应该对其有任何影响</li>
+</ul>
+<h3 id="1-3-并发事务问题"><a href="#1-3-并发事务问题" class="headerlink" title="1.3 并发事务问题"></a>1.3 并发事务问题</h3><h4 id="1-3-1-脏读（Dirty-read）"><a href="#1-3-1-脏读（Dirty-read）" class="headerlink" title="1.3.1 脏读（Dirty read）"></a>1.3.1 脏读（Dirty read）</h4><p>所谓脏读是指一个事务中访问到了另外一个事务未提交的数据，如下，当事务2 回滚时，事务1 返回的是脏数据</p>
+<table>
+<thead>
+<tr>
+<th>事务1</th>
+<th>事务2</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>begin</code></td>
+<td><code>begin</code></td>
+</tr>
+<tr>
+<td></td>
+<td><code>update table_name set field_name = &#39;xxx&#39; where id = 1</code></td>
+</tr>
+<tr>
+<td><code>select field_name from table_name where id = 1</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>commit</code></td>
+<td><code>rollback</code></td>
+</tr>
+</tbody></table>
+<h4 id="1-3-2-丢失修改（Lost-to-modify）"><a href="#1-3-2-丢失修改（Lost-to-modify）" class="headerlink" title="1.3.2 丢失修改（Lost to modify）"></a>1.3.2 丢失修改（Lost to modify）</h4><p>两个事务对数据进行修改，将数据都读入了各自对应的内存区域，进行修改但都未写入磁盘，此时后执行的修改操作覆盖了先执行的修改操作，触发丢失修改</p>
+<p>如下，事务 1 向工资卡 <code>+100</code> 工资，事务 2 向工资卡 <code>+50</code> 奖金，结果只成功加了奖金</p>
+<table>
+<thead>
+<tr>
+<th>事务1</th>
+<th>事务2</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>begin</code></td>
+<td><code>begin</code></td>
+</tr>
+<tr>
+<td><code>w=100 -&gt; select w form table_name where id = 1</code></td>
+<td><code>w=100 -&gt; select w form table_name where id = 1</code></td>
+</tr>
+<tr>
+<td><code>update table_name set wages=w+100 where id = 1</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>commit</code></td>
+<td><code>update table_name set wages=w+50 where id = 1</code></td>
+</tr>
+<tr>
+<td></td>
+<td><code>commit</code></td>
+</tr>
+</tbody></table>
+<h4 id="1-3-3-不可重复读（Unrepeatable-read）"><a href="#1-3-3-不可重复读（Unrepeatable-read）" class="headerlink" title="1.3.3 不可重复读（Unrepeatable read）"></a>1.3.3 不可重复读（Unrepeatable read）</h4><p>一个事务读取同一条记录 2 次，得到的结果不一致</p>
+<table>
+<thead>
+<tr>
+<th>事务1</th>
+<th>事务2</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>begin</code></td>
+<td><code>begin</code></td>
+</tr>
+<tr>
+<td><code>select field_name from table_name where id = 1</code></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td><code>update table_name set field_name = &#39;xxx&#39; where id = 1</code></td>
+</tr>
+<tr>
+<td><code>select field_name from table_name where id = 1</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>commit</code></td>
+<td><code>rollback</code></td>
+</tr>
+</tbody></table>
+<h4 id="1-3-4-幻读（Phantom-read）"><a href="#1-3-4-幻读（Phantom-read）" class="headerlink" title="1.3.4 幻读（Phantom read）"></a>1.3.4 幻读（Phantom read）</h4><p>一个事务读取 2 次，得到的记录条数不一致</p>
+<table>
+<thead>
+<tr>
+<th>事务1</th>
+<th>事务2</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>begin</code></td>
+<td><code>begin</code></td>
+</tr>
+<tr>
+<td><code>select field_name from table_name where id &gt; 2</code></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td><code>insert into table_name(id, field_name) valuse(6, 6)</code></td>
+</tr>
+<tr>
+<td><code>select field_name from table_name where id &gt; 2</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>commit</code></td>
+<td><code>rollback</code></td>
+</tr>
+</tbody></table>
+<h2 id="二、并发事务控制方式"><a href="#二、并发事务控制方式" class="headerlink" title="二、并发事务控制方式"></a>二、并发事务控制方式</h2><p>MySQL 中并发事务的控制方式无非就两种：<strong>锁</strong> 和 <strong>MVCC</strong>。锁可以看作是悲观控制的模式，多版本并发控制（MVCC，Multiversion Concurrency Control）可以看作是乐观控制的模式</p>
+<h3 id="2-1-锁"><a href="#2-1-锁" class="headerlink" title="2.1 锁"></a>2.1 锁</h3><p>MySQL 中主要是通过 <strong>读写锁</strong> 来实现并发控制</p>
+<ul>
+<li><strong>共享锁（S 锁）</strong> ：又称读锁，事务在读取记录的时候获取共享锁，允许多个事务同时获取（锁兼容）</li>
+<li><strong>排他锁（X 锁）</strong> ：又称写锁/独占锁，事务在修改记录的时候获取排他锁，不允许多个事务同时获取。如果一个记录已经被加了排他锁，那其他事务不能再对这条记录加任何类型的锁（锁不兼容）</li>
+</ul>
+<p>读写锁可以做到读读并行，但是无法做到写读、写写并行。另外，根据根据锁粒度的不同，又被分为 <strong>表级锁（table-level locking）</strong> 和 <strong>行级锁（row-level locking）</strong> </p>
+<p>InnoDB 不光支持表级锁，还支持行级锁，默认为行级锁。行级锁的粒度更小，仅对相关的记录上锁即可（对一行或者多行记录加锁），所以对于并发写入操作来说， InnoDB 的性能更高。不论是表级锁还是行级锁，都存在共享锁（Share Lock，S 锁）和排他锁（Exclusive Lock，X 锁）这两类</p>
+<h3 id="2-2-MVCC"><a href="#2-2-MVCC" class="headerlink" title="2.2 MVCC"></a>2.2 MVCC</h3><p><strong>MVCC</strong> 是多版本并发控制方法，即对一份数据会存储多个版本，通过事务的可见性来保证事务能看到自己应该看到的版本。通常会有一个全局的版本分配器来为每一行数据设置版本号，版本号是唯一的</p>
+<blockquote>
+<p> 在后面会仔细介绍</p>
+</blockquote>
+<h2 id="三、事务级别"><a href="#三、事务级别" class="headerlink" title="三、事务级别"></a>三、事务级别</h2><p>SQL 标准定义了四个隔离级别，隔离级别越高，对性能的影响就越严重</p>
+<ul>
+<li><strong>读未提交（READ-UNCOMMITTED）：</strong>最低的隔离级别，允许读取尚未提交的数据变更，可能会导致脏读、幻读、不可重复读</li>
+<li><strong>读已提交（READ-COMMIT）：</strong>允许读取并发事务已经提交的数据，可以阻止脏读，但是幻读或者不可重复读仍有可能发生</li>
+<li><strong>可重复读（REPEATABLE-READ）：</strong>对同一字段的多次读取结果都是一致的，除非数据是被本身事务自己修改，可以阻止脏读和不可重复读</li>
+<li><strong>可串行化（SERIALIZABLE）：</strong>最高的隔离级别，完全服从 ACID 的隔离级别。所有的事务依次逐个执行，这样事务之间就完全不可能产生干扰，也就是说，该级别可以防止脏读、不可重复读以及幻读</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">隔离级别</th>
+<th align="center">脏读</th>
+<th align="center">不可重复读</th>
+<th align="center">幻读</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">READ-UNCOMMITTED</td>
+<td align="center">√</td>
+<td align="center">√</td>
+<td align="center">√</td>
+</tr>
+<tr>
+<td align="center">READ-COMMITTED</td>
+<td align="center">×</td>
+<td align="center">√</td>
+<td align="center">√</td>
+</tr>
+<tr>
+<td align="center">REPEATABLE-READ</td>
+<td align="center">×</td>
+<td align="center">×</td>
+<td align="center">√</td>
+</tr>
+<tr>
+<td align="center">SERIALIZABLE</td>
+<td align="center">×</td>
+<td align="center">×</td>
+<td align="center">×</td>
+</tr>
+</tbody></table>
+<p>MySQL InnoDB 存储引擎的默认支持的隔离级别是 <strong>可重复读（REPEATABLE-READ）</strong>，通过 <code>select @@transaction_isolation;</code> 查询</p>
+<p><img src="https://raw.githubusercontent.com/jaywong1024/picgo/main/img/image-20230312210502026.png" alt="image-20230312210502026"></p>
+</p></div><div class="post-footer"><div class="meta"><div class="info"><i class="fa fa-sun-o"></i><span class="date">2023-03-02</span><a class="tag" href="/categories/事务/" title="事务">事务 </a><i class="fa fa-tag"></i><a class="tag" href="/tags/【MySQL】/" title="【MySQL】">【MySQL】 </a><span class="leancloud_visitors"></span><span>About 1619 words, 5 min 23 sec  read</span></div></div></div></div><div class="share"><div class="evernote"><a class="fa fa-bookmark" href="" onclick="javascript:join_favorite()" ref="sidebar"></a></div><div class="weibo"><a class="fa fa-weibo" href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));"></a></div><div class="twitter"><a class="fa fa-twitter" href="http://twitter.com/home?status=,http://yoursite.com/2023/03/02/1.编程基础/1.4 数据库/1.4.1 MySQL/1.4.1.3 事务/,JayWong,1.4.1.3【编程基础 - 数据库 - MySQL】事务,;" target="_blank" rel="noopener"></a></div></div><div class="pagination"><ul class="clearfix"><li class="pre pagbuttons"><a class="btn" role="navigation" href="/2023/03/03/1.%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/1.4%20%E6%95%B0%E6%8D%AE%E5%BA%93/1.4.1%20MySQL/1.4.1.4%20%E7%B4%A2%E5%BC%95/" title="1.4.1.4【编程基础 - 数据库 - MySQL】索引">Previous</a></li><li class="next pagbuttons"><a class="btn" role="navigation" href="/2023/03/01/1.%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/1.4%20%E6%95%B0%E6%8D%AE%E5%BA%93/1.4.1%20MySQL/1.4.1.1%20%E5%9F%BA%E7%A1%80/" title="1.4.1.1【编程基础 - 数据库 - MySQL】基础">Next</a></li></ul></div><script src="/js/visitors.js"></script></div></div></div></div><script src="/js/jquery-migrate-1.2.1.min.js"></script><script src="/js/jquery.appear.js"></script><script src="/js/add-bookmark.js"></script><script>(function(window){var INSIGHT_CONFIG={TRANSLATION:{POSTS:"Posts",PAGES:"Pages",CATEGORIES:"Categories",TAGS:"Tags",UNTITLED:"(Untitled)",},CONTENT_URL:"/content.json",};window.INSIGHT_CONFIG=INSIGHT_CONFIG})(window);</script><script src="/js/insight.js" defer></script><div class="searchbox ins-search"><div class="searchbox-container ins-search-container"><div class="searchbox-input-wrapper"><input class="searchbox-input ins-search-input" type="text" placeholder="Search..."><span class="searchbox-close"><a class="fa fa-times-circle" onclick="closeWindow();"></a></span></div><div class="searchbox-result-wrapper ins-section-wrapper"><div class="ins-section-container"><p>Seraching...</p></div></div></div></div></body></html>

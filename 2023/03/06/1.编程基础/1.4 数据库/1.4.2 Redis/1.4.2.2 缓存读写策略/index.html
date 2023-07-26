@@ -1,0 +1,149 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><meta name="author" content="JayWong"><title>1.4.2.2【编程基础 - 数据库 - Redis】缓存读写策略 · JayWong</title><meta name="description" content="一、什么是一致性？一致性就是数据保持一致，在分布式系统中，可以理解为多个节点中数据的值是一致的。
+
+强一致性：这种一致性级别是最符合用户直觉的，它要求系统写入什么，读出来的也会是什么，用户体验好，但实现起来往往对系统的性能影响大
+弱一致性：这种一致性级别约束了系统在写入成功后，不承诺立即可以读到写入"><meta name="keywords" content="Blog,JayWong,Hexo"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="renderer" content="webkit"><link rel="shortcut icon" type="image/x-icon" href="/images/java.jpeg"><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/blog_basic.css"><link rel="stylesheet" href="/css/font-awesome.min.css"><link rel="stylesheet" href="/css/insight.css"><link rel="stylesheet" href="/css/search.css"><link rel="alternate" type="application/atom+xml" title="ATOM 1.0" href="/atom.xml"><script src="/js/jquery.js"></script><meta name="generator" content="Hexo 4.2.1"></head><body><div class="page-top animated fadeInDown"><div class="nav"><li> <a href="/">Home</a></li><li> <a href="/archives">Archives</a></li><li> <a href="/tags">Tags</a></li><li> <a href="/about">About</a></li><li> <a href="/links">Links</a></li></div><div class="information"><div class="nav_right_btn"><li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li><li><a class="fa fa-search" onclick="openWindow();"></a></li></div><div class="avatar"><img src="/images/java.jpeg"></div></div></div><div class="sidebar animated fadeInDown"><div class="sidebar-top"><div class="logo-title"><div class="title"><img src="/images/themes/logo@2x.png" style="width:220px;" alt="favicon"><h3 title=""><a href="/">JayWong</a></h3><div class="description"><p>Programmer / Photographer</p></div></div><ul class="social-links"><li><a href="https://github.com/jaywong1024" target="_blank" rel="noopener"><i class="fa fa-github"></i></a></li></ul></div><details class="ltr" open><summary>Menu</summary><div class="tocmenu"><p><ol class="toclist"><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#一、什么是一致性？"><span class="toclist-number">1.</span> <span class="toclist-text">一、什么是一致性？</span></a></li><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#二、经典的缓存策略"><span class="toclist-number">2.</span> <span class="toclist-text">二、经典的缓存策略</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#2-1-Cache-Aside-Pattern（旁路缓存模式）"><span class="toclist-number">2.1.</span> <span class="toclist-text">2.1 Cache Aside Pattern（旁路缓存模式）</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#2-1-1-Write（写操作）"><span class="toclist-number">2.1.1.</span> <span class="toclist-text">2.1.1 Write（写操作）</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#2-1-2-Read（读操作）"><span class="toclist-number">2.1.2.</span> <span class="toclist-text">2.1.2 Read（读操作）</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#2-2-3-问题与缺陷"><span class="toclist-number">2.1.3.</span> <span class="toclist-text">2.2.3 问题与缺陷</span></a></li></ol></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#2-2-Read-Write-Through-Pattern（读写穿透）"><span class="toclist-number">2.2.</span> <span class="toclist-text">2.2 Read&#x2F;Write Through Pattern（读写穿透）</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#2-2-1-Write（写操作）"><span class="toclist-number">2.2.1.</span> <span class="toclist-text">2.2.1 Write（写操作）</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#2-2-2-Read（读操作）"><span class="toclist-number">2.2.2.</span> <span class="toclist-text">2.2.2 Read（读操作）</span></a></li></ol></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#2-3-Write-Behind-Pattern（异步缓存写入）"><span class="toclist-number">2.3.</span> <span class="toclist-text">2.3 Write Behind Pattern（异步缓存写入）</span></a></li></ol></li></ol></p></div></details></div><div class="footer"><div class="p"> <span> CC-BY-SA-3.0 for the entire station </span><i class="fa fa-star"></i><span> JayWong</span></div><div class="by_farbox"><span>Powered by </span><a href="https://hexo.io/zh-cn/" target="_blank">Hexo </a><span> & </span><span>Anatolo </span></div><div class="beian"></div></div></div><div class="main"><div class="autopagerize_page_element"><div class="content"><div class="post-page"><div class="post animated fadeInDown"><div class="post-title"><h3><a>1.4.2.2【编程基础 - 数据库 - Redis】缓存读写策略</a></h3></div><div class="post-content"><p><h2 id="一、什么是一致性？"><a href="#一、什么是一致性？" class="headerlink" title="一、什么是一致性？"></a>一、什么是一致性？</h2><p>一致性就是数据保持一致，在分布式系统中，可以理解为多个节点中数据的值是一致的。</p>
+<ul>
+<li><strong>强一致性：</strong>这种一致性级别是最符合用户直觉的，它要求系统写入什么，读出来的也会是什么，用户体验好，但实现起来往往对系统的性能影响大</li>
+<li><strong>弱一致性：</strong>这种一致性级别约束了系统在写入成功后，不承诺立即可以读到写入的值，也不承诺多久之后数据能够达到一致，但会尽可能地保证到某个时间级别（比如秒级别）后，数据能够达到一致状态</li>
+<li><strong>最终一致性：</strong>最终一致性是弱一致性的一个特例，系统会保证在一定时间内，能够达到一个数据一致的状态。这里之所以将最终一致性单独提出来，是因为它是弱一致性中非常推崇的一种一致性模型，也是业界在大型分布式系统的数据一致性上比较推崇的模型</li>
+</ul>
+<h2 id="二、经典的缓存策略"><a href="#二、经典的缓存策略" class="headerlink" title="二、经典的缓存策略"></a>二、经典的缓存策略</h2><h3 id="2-1-Cache-Aside-Pattern（旁路缓存模式）"><a href="#2-1-Cache-Aside-Pattern（旁路缓存模式）" class="headerlink" title="2.1 Cache Aside Pattern（旁路缓存模式）"></a>2.1 Cache Aside Pattern（旁路缓存模式）</h3><p>旁路缓存模式是最常使用的一种缓存独写模式，适合读多写少的场景。旁路缓存中，应用需要同时维系 db 和 cache 的数据，并且以 db 的结果为准</p>
+<h4 id="2-1-1-Write（写操作）"><a href="#2-1-1-Write（写操作）" class="headerlink" title="2.1.1 Write（写操作）"></a>2.1.1 Write（写操作）</h4><p>先更新 db 的信息，然后直接删除 cache 的数据，在读操作时将数据写回 cache，如下图</p>
+<p><img src="https://raw.githubusercontent.com/jaywong1024/picgo/main/img/MySQL-C300.drawio.png" alt="MySQL-C300.drawio"></p>
+<h4 id="2-1-2-Read（读操作）"><a href="#2-1-2-Read（读操作）" class="headerlink" title="2.1.2 Read（读操作）"></a>2.1.2 Read（读操作）</h4><p>先从 cache 中获取数据，获取失败就从 db 中读取数据返回，再写到 cache 中</p>
+<p><img src="https://raw.githubusercontent.com/jaywong1024/picgo/main/img/MySQL-Cache%20Aside%20Read.300.png" alt="MySQL-Cache Aside Read.300"></p>
+<h4 id="2-2-3-问题与缺陷"><a href="#2-2-3-问题与缺陷" class="headerlink" title="2.2.3 问题与缺陷"></a>2.2.3 问题与缺陷</h4><p><strong>问题1：为什么不先删除 cache 中的数据，再更新 db 中的数据？</strong></p>
+<p>在一个读多写少的场景中，假设线程 A 先删除了 cache 中的数据，再准备写 db 数据，在这个准备的过程中，线程 B 读取 db 数据成功（线程B 先拿到 db 的读锁，读取数据成功后线程 A 再写数据到 db，不存在事务问题），返回数据后写了 cache。线程 B 写入 cache 是旧的数据，会导致 db 和 cache 一致性问题</p>
+<table>
+<thead>
+<tr>
+<th>No</th>
+<th>线程 A</th>
+<th>线程 B</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>删除 cache 数据</td>
+<td></td>
+</tr>
+<tr>
+<td>2</td>
+<td>准备写 db …</td>
+<td>读取 db 返回</td>
+</tr>
+<tr>
+<td>3</td>
+<td>更新 db 数据</td>
+<td>旧数据写入 cache</td>
+</tr>
+</tbody></table>
+<p>可以通过延迟双删的方案处理，此方案保证了最终一致性，期间会有小概率出现数据不一致的情况，例如线程 C，读取到了旧的数据</p>
+<table>
+<thead>
+<tr>
+<th>No</th>
+<th>线程 A</th>
+<th>线程 B</th>
+<th>线程 C</th>
+<th>线程 D</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>删除 cache 数据</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>2</td>
+<td></td>
+<td>读取 db 数据返回</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>3</td>
+<td>更新 db 数据</td>
+<td>旧数据写入 cache</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>4</td>
+<td></td>
+<td></td>
+<td>读取 cache 旧数据 返回</td>
+<td></td>
+</tr>
+<tr>
+<td>5</td>
+<td>延迟删除 cache 数据</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>6</td>
+<td></td>
+<td></td>
+<td></td>
+<td>读取 db 数据返回</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>新数据写入 cache</td>
+</tr>
+</tbody></table>
+<p><strong>问题2：先更新 db 再删除 cache 就没有问题吗？</strong></p>
+<p>例如以下场景，线程 A 依旧有可能写入旧的数据到 cache 中，依旧有小概率导致 db 和 cache 一致性问</p>
+<table>
+<thead>
+<tr>
+<th>No</th>
+<th>线程 A</th>
+<th>线程 B</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>cache 无数据</td>
+<td></td>
+</tr>
+<tr>
+<td>2</td>
+<td>读取 db 数据返回</td>
+<td>cache 无数据</td>
+</tr>
+<tr>
+<td>3</td>
+<td></td>
+<td>更新 db 数据（因为 cache 无数据，不用执行删除操作，直接结束）</td>
+</tr>
+<tr>
+<td>4</td>
+<td>旧数据写入 cache</td>
+<td></td>
+</tr>
+</tbody></table>
+<p><strong>缺陷 1：首次请求数据一定不在 cache 的问题</strong></p>
+<p>可以将热点数据可以提前放入 cache 中</p>
+<p><strong>缺陷 2：写操作比较频繁的话导致 cache 中的数据会被频繁被删除，这样会影响缓存命中率</strong></p>
+<ul>
+<li>对于强一致的场景，只能通过分布式锁保证更新 db 的同时更新 cache，但这样比较耗费性能</li>
+<li>对于最终一致的场景，可以在更新 db 的同时更新 cache，给一个较短的过期时间，尽量减少数据不一致的影响</li>
+</ul>
+<p>总的来说，对于写多读少的场景，不是很建议使用缓存</p>
+<h3 id="2-2-Read-Write-Through-Pattern（读写穿透）"><a href="#2-2-Read-Write-Through-Pattern（读写穿透）" class="headerlink" title="2.2 Read/Write Through Pattern（读写穿透）"></a>2.2 Read/Write Through Pattern（读写穿透）</h3><p>读写穿透模式中，应用将 cache 视为主要存储，由 cache 自行负责与 db 的交互，减轻应用的职责。种缓存模式非常少见，因为抛去性能方面你的影响，数据的一致性依赖于 cache 的稳定性（如果宕机会丢失数据）</p>
+<h4 id="2-2-1-Write（写操作）"><a href="#2-2-1-Write（写操作）" class="headerlink" title="2.2.1 Write（写操作）"></a>2.2.1 Write（写操作）</h4><p>先查询 cache 是否有数据，有数据则先更新 cache 中的数据再由 cache 自己更新 db，否则直接更新 db</p>
+<p><img src="https://raw.githubusercontent.com/jaywong1024/picgo/main/img/wwThrough.drawio.png" alt="wwThrough.drawio"></p>
+<h4 id="2-2-2-Read（读操作）"><a href="#2-2-2-Read（读操作）" class="headerlink" title="2.2.2 Read（读操作）"></a>2.2.2 Read（读操作）</h4><p>先从 cache 中读取数据，命中缓存则直接返回，否则从 db 加载数据写入 cache 中返回</p>
+<p><img src="https://raw.githubusercontent.com/jaywong1024/picgo/main/img/300L-Read%20Through.drawio.png" alt="300L-Read Through.drawio"></p>
+<h3 id="2-3-Write-Behind-Pattern（异步缓存写入）"><a href="#2-3-Write-Behind-Pattern（异步缓存写入）" class="headerlink" title="2.3 Write Behind Pattern（异步缓存写入）"></a>2.3 Write Behind Pattern（异步缓存写入）</h3><p>Write Behind Pattern 和 Write Through 很相似，都是以 cache 作为主要存储，但 Write Behind 在写入 cache 后不是同步更新 db 的，而是通过 <strong>异步批量</strong> 的方式来更新 db。这样的好处是性能非常的好，缺点和 Write Through 一样，数据的一致性依赖于 cache 的稳定性（如果宕机会丢失数据）</p>
+<p>这种策略在平时的开发中比较少见，但在系统间的交互是有用的到（例如使用消息队列保证多个系统数据的最终一致性），MySQL 的 InnoDB 存储引擎 Buffer Pool 机制也使用了这种策略</p>
+<p><img src="https://raw.githubusercontent.com/jaywong1024/picgo/main/img/MySQL-Write%20Behind.drawio.png" alt="MySQL-Write Behind.drawio"></p>
+</p></div><div class="post-footer"><div class="meta"><div class="info"><i class="fa fa-sun-o"></i><span class="date">2023-03-06</span><a class="tag" href="/categories/缓存读写策略/" title="缓存读写策略">缓存读写策略 </a><i class="fa fa-tag"></i><a class="tag" href="/tags/【Redis】/" title="【Redis】">【Redis】 </a><span class="leancloud_visitors"></span><span>About 1435 words, 4 min 47 sec  read</span></div></div></div></div><div class="share"><div class="evernote"><a class="fa fa-bookmark" href="" onclick="javascript:join_favorite()" ref="sidebar"></a></div><div class="weibo"><a class="fa fa-weibo" href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));"></a></div><div class="twitter"><a class="fa fa-twitter" href="http://twitter.com/home?status=,http://yoursite.com/2023/03/06/1.编程基础/1.4 数据库/1.4.2 Redis/1.4.2.2 缓存读写策略/,JayWong,1.4.2.2【编程基础 - 数据库 - Redis】缓存读写策略,;" target="_blank" rel="noopener"></a></div></div><div class="pagination"><ul class="clearfix"><li class="pre pagbuttons"><a class="btn" role="navigation" href="/2023/03/07/1.%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/1.4%20%E6%95%B0%E6%8D%AE%E5%BA%93/1.4.2%20Redis/1.4.2.3%20%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B/" title="1.4.2.3【编程基础 - 数据库 - Redis】线程模型">Previous</a></li><li class="next pagbuttons"><a class="btn" role="navigation" href="/2023/03/05/1.%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/1.4%20%E6%95%B0%E6%8D%AE%E5%BA%93/1.4.2%20Redis/1.4.2.1%20%E5%9F%BA%E7%A1%80/" title="1.4.2.1【编程基础 - 数据库 - Redis】基础">Next</a></li></ul></div><script src="/js/visitors.js"></script></div></div></div></div><script src="/js/jquery-migrate-1.2.1.min.js"></script><script src="/js/jquery.appear.js"></script><script src="/js/add-bookmark.js"></script><script>(function(window){var INSIGHT_CONFIG={TRANSLATION:{POSTS:"Posts",PAGES:"Pages",CATEGORIES:"Categories",TAGS:"Tags",UNTITLED:"(Untitled)",},CONTENT_URL:"/content.json",};window.INSIGHT_CONFIG=INSIGHT_CONFIG})(window);</script><script src="/js/insight.js" defer></script><div class="searchbox ins-search"><div class="searchbox-container ins-search-container"><div class="searchbox-input-wrapper"><input class="searchbox-input ins-search-input" type="text" placeholder="Search..."><span class="searchbox-close"><a class="fa fa-times-circle" onclick="closeWindow();"></a></span></div><div class="searchbox-result-wrapper ins-section-wrapper"><div class="ins-section-container"><p>Seraching...</p></div></div></div></div></body></html>
