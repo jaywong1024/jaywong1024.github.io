@@ -1,0 +1,138 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><meta name="author" content="JayWong"><title>1.4.1.1【编程基础 - 数据库 - MySQL】基础 · JayWong</title><meta name="description" content="一、基础概念1.1 关系型数据库关系型数据库（RDBMS，Relational Database Management System）就是一种建立在关系模型（关系模型表明了数据库中所存储的数据之间的联系）的基础上的数据库
+关系型数据库中，我们的数据都被存放在了各种表中，例如下面的商品表 goods "><meta name="keywords" content="Blog,JayWong,Hexo"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="renderer" content="webkit"><link rel="shortcut icon" type="image/x-icon" href="/images/java.jpeg"><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/blog_basic.css"><link rel="stylesheet" href="/css/font-awesome.min.css"><link rel="stylesheet" href="/css/insight.css"><link rel="stylesheet" href="/css/search.css"><link rel="alternate" type="application/atom+xml" title="ATOM 1.0" href="/atom.xml"><script src="/js/jquery.js"></script><meta name="generator" content="Hexo 4.2.1"></head><body><div class="page-top animated fadeInDown"><div class="nav"><li> <a href="/">Home</a></li><li> <a href="/archives">Archives</a></li><li> <a href="/tags">Tags</a></li><li> <a href="/about">About</a></li><li> <a href="/links">Links</a></li></div><div class="information"><div class="nav_right_btn"><li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li><li><a class="fa fa-search" onclick="openWindow();"></a></li></div><div class="avatar"><img src="/images/java.jpeg"></div></div></div><div class="sidebar animated fadeInDown"><div class="sidebar-top"><div class="logo-title"><div class="title"><img src="/images/themes/logo@2x.png" style="width:220px;" alt="favicon"><h3 title=""><a href="/">JayWong</a></h3><div class="description"><p>今、頑張って日本語の勉強をしています</p></div></div><ul class="social-links"><li><a href="https://github.com/jaywong1024" target="_blank" rel="noopener"><i class="fa fa-github"></i></a></li></ul></div><details class="ltr" open><summary>Menu</summary><div class="tocmenu"><p><ol class="toclist"><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#一、基础概念"><span class="toclist-number">1.</span> <span class="toclist-text">一、基础概念</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-1-关系型数据库"><span class="toclist-number">1.1.</span> <span class="toclist-text">1.1 关系型数据库</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-2-SQL"><span class="toclist-number">1.2.</span> <span class="toclist-text">1.2 SQL</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-3-MySQL"><span class="toclist-number">1.3.</span> <span class="toclist-text">1.3 MySQL</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#"><span class="toclist-number">1.4.</span> <span class="toclist-text"></span></a></li></ol></li><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#二、架构"><span class="toclist-number">2.</span> <span class="toclist-text">二、架构</span></a></li><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#三、存储引擎"><span class="toclist-number">3.</span> <span class="toclist-text">三、存储引擎</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#3-1-默认存储引擎"><span class="toclist-number">3.1.</span> <span class="toclist-text">3.1 默认存储引擎</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#3-2-存储引擎架构"><span class="toclist-number">3.2.</span> <span class="toclist-text">3.2 存储引擎架构</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#3-3-InnoDB-和-MyISAM-区别"><span class="toclist-number">3.3.</span> <span class="toclist-text">3.3 InnoDB 和 MyISAM 区别</span></a></li></ol></li><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#四、日志"><span class="toclist-number">4.</span> <span class="toclist-text">四、日志</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#4-1-MySQL-日志"><span class="toclist-number">4.1.</span> <span class="toclist-text">4.1 MySQL 日志</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#4-2-InnoDB-日志"><span class="toclist-number">4.2.</span> <span class="toclist-text">4.2 InnoDB 日志</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#4-3-binlog"><span class="toclist-number">4.3.</span> <span class="toclist-text">4.3 binlog</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#4-4-redo-log"><span class="toclist-number">4.4.</span> <span class="toclist-text">4.4 redo log</span></a></li></ol></li><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#五、执行流程"><span class="toclist-number">5.</span> <span class="toclist-text">五、执行流程</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#5-1-查询流程"><span class="toclist-number">5.1.</span> <span class="toclist-text">5.1 查询流程</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#5-2-更新流程"><span class="toclist-number">5.2.</span> <span class="toclist-text">5.2 更新流程</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#5-3-两阶段提交"><span class="toclist-number">5.3.</span> <span class="toclist-text">5.3 两阶段提交</span></a></li></ol></li></ol></p></div></details></div><div class="footer"><div class="p"> <span> CC-BY-SA-3.0 for the entire station </span><i class="fa fa-star"></i><span> JayWong</span></div><div class="by_farbox"><span>Powered by </span><a href="https://hexo.io/zh-cn/" target="_blank">Hexo </a><span> & </span><span>Anatolo </span></div><div class="beian"></div></div></div><div class="main"><div class="autopagerize_page_element"><div class="content"><div class="post-page"><div class="post animated fadeInDown"><div class="post-title"><h3><a>1.4.1.1【编程基础 - 数据库 - MySQL】基础</a></h3></div><div class="post-content"><p><h2 id="一、基础概念"><a href="#一、基础概念" class="headerlink" title="一、基础概念"></a>一、基础概念</h2><h3 id="1-1-关系型数据库"><a href="#1-1-关系型数据库" class="headerlink" title="1.1 关系型数据库"></a>1.1 关系型数据库</h3><p>关系型数据库（RDBMS，Relational Database Management System）就是一种建立在关系模型（关系模型表明了数据库中所存储的数据之间的联系）的基础上的数据库</p>
+<p>关系型数据库中，我们的数据都被存放在了各种表中，例如下面的商品表 <code>goods</code> 和商品图片 URL 表 <code>goods_img_url</code></p>
+<p><img src="https://raw.githubusercontent.com/jaywong1024/picgo/main/img/image-20230311134250716.png" alt="image-20230311134250716"></p>
+<p>常见的关系型数据库有：MySQL、PostgreSQL、Oracle、SQL Server</p>
+<h3 id="1-2-SQL"><a href="#1-2-SQL" class="headerlink" title="1.2 SQL"></a>1.2 SQL</h3><p>SQL 是一种结构化查询语言（Structured Query Language），专门用来与数据库打交道，目的是提供一种从数据库中读写数据的简单有效的方法。几乎所有的主流关系数据库都支持 SQL ，适用性非常强。并且，一些非关系型数据库也兼容 SQL 或者使用的是类似于 SQL 的查询语言</p>
+<h3 id="1-3-MySQL"><a href="#1-3-MySQL" class="headerlink" title="1.3 MySQL"></a>1.3 MySQL</h3><p>MySQL 是一个关系型数据库管理系统，由瑞典 MySQL AB 公司开发，目前属于 Oracle 公司。由于 MySQL 是开源免费并且比较成熟的数据库，因此，MySQL 被大量使用在各种系统中。任何人都可以在 GPL（General Public License）的许可下下载并根据个性化的需要对其进行修改。MySQL 的默认端口号是 <strong>3306</strong></p>
+<p>MySQL 主要具有下面这些优点：</p>
+<ul>
+<li>成熟稳定，功能完善</li>
+<li>开源免费</li>
+<li>文档丰富，既有详细的官方文档，又有非常多优质文章可供参考学习</li>
+<li>开箱即用，操作简单，维护成本低</li>
+<li>兼容性好，支持常见的操作系统，支持多种开发语言</li>
+<li>社区活跃，生态完善</li>
+<li>事务支持优秀， InnoDB 存储引擎默认使用 REPEATABLE-READ 并不会有任何性能损失，并且，InnoDB 实现的 REPEATABLE-READ 隔离级别其实是可以解决幻读问题发生的</li>
+<li>支持分库分表、读写分离、高可用</li>
+</ul>
+<h3 id><a href="#" class="headerlink" title></a></h3><h2 id="二、架构"><a href="#二、架构" class="headerlink" title="二、架构"></a>二、架构</h2><p>MySQL 主要分为两层，分别是 Server 层和存储引擎层</p>
+<p><img src="https://raw.githubusercontent.com/jaywong1024/picgo/main/img/MySQL.drawio.png" alt="MySQL.drawio"></p>
+<ul>
+<li><strong>Server 层：</strong>主要包括连接器、查询缓存、分析器、优化器、执行器等，所有跨存储引擎功能都在这一层实现，比如存储过程、触发器、通用日志模块 <strong>binlog</strong> 、视图、函数等<ul>
+<li><strong>连接器：</strong>身份认证和权限相关操作</li>
+<li><strong>查询缓存：</strong>执行查询语句的时候，会优先查询缓存（MySQL 8.0 版本后移除）</li>
+<li><strong>分析器：</strong>主要是解析查询语句，最终生成语法树。首先解析器会对查询语句进行语法分析，如果语句语法有错误，则返回相应的错误信息。语法检查通过后，解析器会查询缓存，如果缓存中有对应的语句，就直接返回结果不进行接下来的优化执行操作</li>
+<li><strong>优化器：</strong>优化器的作用主要是对查询语句进行优化，包括选择合适的索引，数据的读取方式</li>
+<li><strong>执行器：</strong>执行语句，然后从存储引擎返回数据</li>
+</ul>
+</li>
+<li><strong>存储引擎：</strong>主要负责数据的存储和读取，采用可以替代的 <strong>插件式架构</strong>，支持 InnoDB（MySQL 5.5 版本开始作为默认存储引擎，自带日志模块 redo log）、MyISAM 等</li>
+</ul>
+<h2 id="三、存储引擎"><a href="#三、存储引擎" class="headerlink" title="三、存储引擎"></a>三、存储引擎</h2><h3 id="3-1-默认存储引擎"><a href="#3-1-默认存储引擎" class="headerlink" title="3.1 默认存储引擎"></a>3.1 默认存储引擎</h3><p>使用 <code>show engines</code> 可以看到，MySQL 8.0.27 使用 InnoDB 作为默认的存储引擎，可以看出只有 InnoDB 是事务性存储引擎，也就是说只有 InnoDB 支持事务</p>
+<p><img src="https://raw.githubusercontent.com/jaywong1024/picgo/main/img/image-20230311224441953.png" alt="image-20230311224441953"></p>
+<p>如果想要看数据库中某个表使用的存储引擎，可以使用 <code>show table status from db_name where name=&#39;table_name&#39;</code></p>
+<p><img src="https://raw.githubusercontent.com/jaywong1024/picgo/main/img/image-20230311224806068.png" alt="image-20230311224806068"></p>
+<h3 id="3-2-存储引擎架构"><a href="#3-2-存储引擎架构" class="headerlink" title="3.2 存储引擎架构"></a>3.2 存储引擎架构</h3><p>MySQL 存储引擎采用的是 <strong>插件式架构</strong> ，支持多种存储引擎，我们甚至可以为不同的数据库表设置不同的存储引擎以适应不同场景的需要。<strong>存储引擎是基于表的，而不是数据库</strong></p>
+<p>并且，还可以根据 MySQL 定义的存储引擎实现标准接口来编写一个属于自己的存储引擎。这些非官方提供的存储引擎可以称为第三方存储引擎，区别于官方存储引擎。像目前最常用的 InnoDB 其实刚开始就是一个第三方存储引擎，后面由于过于优秀，其被 Oracle 直接收购了</p>
+<h3 id="3-3-InnoDB-和-MyISAM-区别"><a href="#3-3-InnoDB-和-MyISAM-区别" class="headerlink" title="3.3 InnoDB 和 MyISAM 区别"></a>3.3 InnoDB 和 MyISAM 区别</h3><p>在 MySQL 5.5 之前，MyISAM 作为默认的搜索引擎</p>
+<table>
+<thead>
+<tr>
+<th>区别</th>
+<th>InnoDB</th>
+<th>MyISAM</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>是否支持行级锁</strong></td>
+<td>支持</td>
+<td>不支持</td>
+</tr>
+<tr>
+<td><strong>是否支持事务</strong></td>
+<td>支持</td>
+<td>不支持</td>
+</tr>
+<tr>
+<td><strong>是否支持外键</strong></td>
+<td>支持（不推荐使用）</td>
+<td>不支持</td>
+</tr>
+<tr>
+<td><strong>是否支持 MVCC</strong></td>
+<td>支持</td>
+<td>不支持</td>
+</tr>
+<tr>
+<td><strong>索引实现</strong></td>
+<td>数据文件本身就是索引文件</td>
+<td>索引文件和数据文件是分离</td>
+</tr>
+<tr>
+<td><strong>性能</strong></td>
+<td>InnoDB 的性能比 MyISAM 更强大</td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id="四、日志"><a href="#四、日志" class="headerlink" title="四、日志"></a>四、日志</h2><h3 id="4-1-MySQL-日志"><a href="#4-1-MySQL-日志" class="headerlink" title="4.1 MySQL 日志"></a>4.1 MySQL 日志</h3><p>MySQL的日志可以分为错误日志、二进制文件、查询日志和慢查询日志</p>
+<ul>
+<li><strong>错误日志</strong> 很好理解，就是服务运行过程中发生的严重错误日志。当我们的数据库无法启动时，就可以来这里看看具体不能启动的原因是什么</li>
+<li><strong>二进制文件</strong> 它有另外一个名字，叫 <strong>binlog</strong>，其记录了对数据库所有的更改</li>
+<li><strong>查询日志</strong> 记录了来自客户端的所有语句</li>
+<li><strong>慢查询日志</strong> 这里记录了所有响应时间超过阈值的SQL语句，这个阈值可以自己设置，参数为 <code>long_query_time</code>，其默认值为 <code>10s</code>，且默认是 <strong>关闭</strong> 的状态，需要手动的打开</li>
+</ul>
+<h3 id="4-2-InnoDB-日志"><a href="#4-2-InnoDB-日志" class="headerlink" title="4.2 InnoDB 日志"></a>4.2 InnoDB 日志</h3><p>InnoDB 日志就只有两种，redo log 和 undo log</p>
+<ul>
+<li><strong>redo log</strong> 重做日志，用于记录事务操作的变化，且记录的是修改之后的值。不管事务是否提交都会记录下来。例如在更新数据时，会先将更新的记录写到 redo log 中，再更新缓存中页中的数据。然后按照设置的更新策略，将内存中的数据刷回磁盘</li>
+<li><strong>undo log</strong> 记录的是记录的事务开始之前的一个版本，可用于事务失败之后发生的回滚</li>
+</ul>
+<h3 id="4-3-binlog"><a href="#4-3-binlog" class="headerlink" title="4.3 binlog"></a>4.3 binlog</h3><blockquote>
+<p>注意：binlog 默认都是不开启的状态！</p>
+</blockquote>
+<p>MySQL 自带的日志模块 <strong>binlog（归档日志）</strong>用于记录数据库执行的写入性操作（不包括查询）信息，以二进制的形式保存在磁盘中。它是 MySQL 的逻辑日志，记录的是 <strong>SQL 的原始逻辑</strong>，由 Server 层进行记录，使用任何存储引擎的 MySQL 数据库都会记录 <strong>binlog</strong> 日志</p>
+<p><strong>binlog</strong> 是通过追加的方式进行写入记录的，可以通过 <code>max_binlog_size</code> 参数设置每个 <strong>binlog</strong> 文件的大小，当文件大小达到给定值之后，会生成新的文件来保存日志</p>
+<p>在实际应用中，<strong>binlog</strong> 的主要使用场景有两个，分别是主从复制和数据恢复</p>
+<ul>
+<li>主从复制：在 Master 端开启 binlog，然后将 binlog 发送到各个 Slave 端，Slave 端重放 binlog 从而达到主从数据一致</li>
+<li>数据恢复：通过使用 mysqlbinlog 工具来恢复数据</li>
+</ul>
+<h3 id="4-4-redo-log"><a href="#4-4-redo-log" class="headerlink" title="4.4 redo log"></a>4.4 redo log</h3><p>日志模块 <strong>redo log（重做日志）</strong>是 InnoDB 独有的，它是物理日志，记录的是 <strong>在某个数据页上做了什么修改</strong>，并不会记录具体的 SQL 语句</p>
+<p><strong>redo log</strong> 是通过循环的方式写入记录的，redo log 只会记录未刷入磁盘的日志，已经刷入磁盘的数据都会从 redo log 这个有限大小的日志文件里删除</p>
+<p>InnoDB 存储引擎会使用 <strong>redo log</strong> 恢复到当即前的时刻，以此来保证数据的完整性，它让 MySQL 拥有了崩溃恢复能力</p>
+<h2 id="五、执行流程"><a href="#五、执行流程" class="headerlink" title="五、执行流程"></a>五、执行流程</h2><p>以上铺垫了那么多，为的就是了解一条 SQL 的执行流程。SQL 执行可以分为两种，查询操作和更新操作</p>
+<h3 id="5-1-查询流程"><a href="#5-1-查询流程" class="headerlink" title="5.1 查询流程"></a>5.1 查询流程</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select * from goods where price &gt;&#x3D; 10 and status &#x3D; &#39;normal&#39;;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>连接器：先检查当前客户端是否有权限</li>
+<li>查询缓存：读取缓存数据（MySQL 8.0 版本之前）</li>
+<li>分析器：分析 SQL 要素，查询 <code>select</code>，表 <code>goods</code>，条件 <code>price &gt;= 10 and status = &#39;normal&#39;</code>，生成语法树</li>
+<li>优化器：确认执行的方案，这里有两种可能（优化器自行选择），确认一种为执行方案后就准备执行了<ul>
+<li>先找到 <code>price &gt;= 10</code> 的数据，再查询 <code>status = &#39;normal&#39;</code> 的数据</li>
+<li>先找到 <code>status = &#39;normal&#39;</code> 的数据，再查询 <code>price &gt;= 10</code> 的数据</li>
+</ul>
+</li>
+<li>执行器：调用数据库引擎接口，返回引擎的执行结果</li>
+</ul>
+<h3 id="5-2-更新流程"><a href="#5-2-更新流程" class="headerlink" title="5.2 更新流程"></a>5.2 更新流程</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">update goods set price &#x3D; 778 where id &#x3D; 1;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>执行器：先查询 <code>id = 1</code> 的数据（如果有缓存则通过缓存）</li>
+<li>存储引擎：根据主键索引树找到这一行，如果 <code>id = 1</code> 这一行在内存池（Buffer Pool）中，就直接返回给执行器。否则，需要先从磁盘读取到内存池中</li>
+<li>执行器：拿到存储引擎返回的行记录，设置 <code>price</code> 字段为 <code>778</code>，得到一行新的记录，然后再调用存储引擎的接口写入这行新记录</li>
+<li>存储引擎：将这行新数据更新到内存中（此时数据页为脏页），将旧记录写到 undo log 中便于回滚，同时将这个更新操作记录到 redo log 里面，此时 redo log 处于 prepare 状态。然后告知执行器执行完成了，随时可以变为 commit 状态</li>
+<li>执行器：生成这个操作的 binlog，并把 binlog 写入磁盘，然后告知存储引擎 binlog 写入成功</li>
+<li>存储引擎：把刚刚写入的 redo log 状态改成提交 commit 状态</li>
+<li>执行器：提交事务 commit 命令</li>
+</ul>
+<h3 id="5-3-两阶段提交"><a href="#5-3-两阶段提交" class="headerlink" title="5.3 两阶段提交"></a>5.3 两阶段提交</h3><p><strong>为什么 redo log 要分两个阶段提交？</strong></p>
+<p><strong>两阶段提交</strong> 其实是一种保证分布式事务数据一致性的协议，它的英文名叫做 <strong>2PC（Two-hase Commit Protocol）</strong>。在 MySQL 中，它是 <strong>为了保证 redo log 和 binlog 的一致性，这两份数据必须严格一致，否则可能出现主备不一致</strong>。它有如下两个阶段：</p>
+<ul>
+<li>Prepare 阶段：将 redo log 写入文件，并刷入磁盘，记录上内部 XA 事务的 ID，同时将 redo log 状态设置为 prepare。redo log 写入成功后，再将 binlog 同样刷入磁盘，记录 XA 事务 ID</li>
+<li>Commit 阶段：向磁盘中的 redo log 写入 commit 标识，表示事务提交。然后执行器调用存储引擎的接口提交事务。这就是整个过程</li>
+</ul>
+<p><strong>证明 2PC 有效性</strong></p>
+<p>// todo jay 图</p>
+<p>假设 redo log 写入成功了，但是还没来得及写入 binlog MySQL 就挂了。此时重启之后会发现 redo log 并没有 commit 标识，此时根据记录的 XA 事务 ID 找到这个事务，进行回滚。如果不回滚并且进行提交，则会造成主库和从库数据不一致的情况，主库从 redo log 恢复并提交了此数据，但从库未从 binlog 中读取</p>
+<p>如果 redo log 写入成功，而且 binlog 也写入成功了，但是还没有来得及将 redo log 从 prepare 改成 commit MySQL 就挂了，此时重启会发现虽然 redo log 没有 commit 标识，但是通过 XID 查询到的 binlog 却已经成功写入磁盘了。此时，虽然 redo log 没有 commit 标识，MySQL 也要提交这个事务。因为 binlog 一旦写入，就可能会被从库或者任何消费 binlog 的消费者给消费。如果此时 MySQL 不提交事务，则可能造成数据不一致。而且目前 redo log 和 binlog 从数据层面上，其实已经 Ready 了，只是差个标志位</p>
+</p></div><div class="post-footer"><div class="meta"><div class="info"><i class="fa fa-sun-o"></i><span class="date">2023-03-01</span><a class="tag" href="/categories/基础/" title="基础">基础 </a><i class="fa fa-tag"></i><a class="tag" href="/tags/【MySQL】/" title="【MySQL】">【MySQL】 </a><span class="leancloud_visitors"></span><span>About 3168 words, 10 min 33 sec  read</span></div></div></div></div><div class="share"><div class="evernote"><a class="fa fa-bookmark" href="" onclick="javascript:join_favorite()" ref="sidebar"></a></div><div class="weibo"><a class="fa fa-weibo" href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));"></a></div><div class="twitter"><a class="fa fa-twitter" href="http://twitter.com/home?status=,http://yoursite.com/2023/03/01/1.编程基础/1.4 数据库/1.4.1 MySQL/1.4.1.1 基础/,JayWong,1.4.1.1【编程基础 - 数据库 - MySQL】基础,;" target="_blank" rel="noopener"></a></div></div><div class="pagination"><ul class="clearfix"><li class="pre pagbuttons"><a class="btn" role="navigation" href="/2023/03/02/1.%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/1.4%20%E6%95%B0%E6%8D%AE%E5%BA%93/1.4.1%20MySQL/1.4.1.3%20%E4%BA%8B%E5%8A%A1/" title="1.4.1.3【编程基础 - 数据库 - MySQL】事务">Previous</a></li><li class="next pagbuttons"><a class="btn" role="navigation" href="/2023/02/27/1.%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/1.2%20%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%20&amp;%20%E7%AE%97%E6%B3%95/1.2.2%20%E7%AE%97%E6%B3%95/1.2.2.5%20%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92/" title="1.2.2.5【编程基础 - 数据结构 &amp; 算法 - 算法】动态规划">Next</a></li></ul></div><script src="/js/visitors.js"></script></div></div></div></div><script src="/js/jquery-migrate-1.2.1.min.js"></script><script src="/js/jquery.appear.js"></script><script src="/js/add-bookmark.js"></script><script>(function(window){var INSIGHT_CONFIG={TRANSLATION:{POSTS:"Posts",PAGES:"Pages",CATEGORIES:"Categories",TAGS:"Tags",UNTITLED:"(Untitled)",},CONTENT_URL:"/content.json",};window.INSIGHT_CONFIG=INSIGHT_CONFIG})(window);</script><script src="/js/insight.js" defer></script><div class="searchbox ins-search"><div class="searchbox-container ins-search-container"><div class="searchbox-input-wrapper"><input class="searchbox-input ins-search-input" type="text" placeholder="Search..."><span class="searchbox-close"><a class="fa fa-times-circle" onclick="closeWindow();"></a></span></div><div class="searchbox-result-wrapper ins-section-wrapper"><div class="ins-section-container"><p>Seraching...</p></div></div></div></div></body></html>
