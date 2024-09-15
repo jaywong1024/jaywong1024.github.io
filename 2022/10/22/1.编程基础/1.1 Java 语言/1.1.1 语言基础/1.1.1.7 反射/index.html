@@ -1,0 +1,231 @@
+<!DOCTYPE html><html lang="zh-CN" id="theme-dark-mode"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><meta name="author" content="JayWong"><title>1.1.1.7【编程基础 - Java 语言 - 语言基础】反射 · JayWong</title><meta name="description" content="一、概述1.1 简介能够分析类能力的程序成为反射（reflective）。反射机制的功能非常强大，它有如下功能：
+
+在运行时分析类的能力
+在运行时查看对象，例如，编写一个 toString 方法供所有类使用
+利用 Method 对象调用类方法
+
+反射的使用者主要是工具开发者，一般在业务代码中是使用不"><meta name="keywords" content="Blog,JayWong,Hexo"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="renderer" content="webkit"><link rel="shortcut icon" type="image/x-icon" href="/images/java.jpeg"><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/blog_basic.css"><link rel="stylesheet" href="/css/font-awesome.min.css"><link rel="stylesheet" href="/css/insight.css"><link rel="stylesheet" href="/css/search.css"><link rel="alternate" type="application/atom+xml" title="ATOM 1.0" href="/atom.xml"><script src="/js/jquery.js"></script><meta name="generator" content="Hexo 4.2.1"></head><body><div class="page-top animated fadeInDown"><div class="nav"><li> <a href="/">Home</a></li><li> <a href="/archives">Archives</a></li><li> <a href="/tags">Tags</a></li><li> <a href="/about">About</a></li><li> <a href="/links">Links</a></li></div><div class="information"><div class="nav_right_btn"><li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li><li><a class="fa fa-search" onclick="openWindow();"></a></li></div><div class="avatar"><img src="/images/java.jpeg"></div></div></div><div class="toc-container in-page animated fadeInDown"><details class="ltr toc-toggle"><summary>Menu</summary><div class="tocmenu"><ol class="toclist"><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#一、概述"><span class="toclist-text">一、概述</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-1-简介"><span class="toclist-text">1.1 简介</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-2-类介绍"><span class="toclist-text">1.2 类介绍</span></a></li></ol></li><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#二、Class-类"><span class="toclist-text">二、Class 类</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#2-1-获取-Class"><span class="toclist-text">2.1 获取 Class</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#2-2-Class-类方法"><span class="toclist-text">2.2 Class 类方法</span></a></li></ol></li><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#三、Field-类"><span class="toclist-text">三、Field 类</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#3-1-获取-Field"><span class="toclist-text">3.1 获取 Field</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#3-2-Field-类方法"><span class="toclist-text">3.2 Field 类方法</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#3-3-私有域属性的获取和设置"><span class="toclist-text">3.3 私有域属性的获取和设置</span></a></li></ol></li><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#四、Method-类"><span class="toclist-text">四、Method 类</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#4-1-获取-Method"><span class="toclist-text">4.1 获取 Method</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#4-2-Method-类方法"><span class="toclist-text">4.2 Method 类方法</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#4-3-通过反射打印类方法"><span class="toclist-text">4.3 通过反射打印类方法</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#4-4-通过反射调用类方法"><span class="toclist-text">4.4 通过反射调用类方法</span></a></li></ol></li><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#五、Constructor-类"><span class="toclist-text">五、Constructor 类</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#5-1-获取构造方法"><span class="toclist-text">5.1 获取构造方法</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#5-2-Constructor-方法"><span class="toclist-text">5.2 Constructor 方法</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#5-3-通过-Constructor-实例化对象"><span class="toclist-text">5.3 通过 Constructor 实例化对象</span></a></li></ol></li><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#六、获取父类和实现接口"><span class="toclist-text">六、获取父类和实现接口</span></a></li></ol></div></details></div><div class="sidebar animated fadeInDown"><div class="sidebar-top"><div class="logo-title"><div class="title"><img src="/images/themes/logo@2x.png" style="width:220px;" alt="favicon"><h3 title=""><a href="/">JayWong</a></h3><div class="description"><p>今、頑張って日本語の勉強をしています</p></div></div><ul class="social-links"><li><a href="https://github.com/Lhcfl" target="_blank" rel="noopener"><i class="fa fa-github"></i></a></li><li><a href="mailto:yourname@example.com"><i class="fa fa-envelope"></i></a></li></ul></div><div class="toc-container in-sidebar"><details class="ltr" open><summary>Menu</summary><div class="tocmenu"><ol class="toclist"><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#一、概述"><span class="toclist-text">一、概述</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-1-简介"><span class="toclist-text">1.1 简介</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-2-类介绍"><span class="toclist-text">1.2 类介绍</span></a></li></ol></li><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#二、Class-类"><span class="toclist-text">二、Class 类</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#2-1-获取-Class"><span class="toclist-text">2.1 获取 Class</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#2-2-Class-类方法"><span class="toclist-text">2.2 Class 类方法</span></a></li></ol></li><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#三、Field-类"><span class="toclist-text">三、Field 类</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#3-1-获取-Field"><span class="toclist-text">3.1 获取 Field</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#3-2-Field-类方法"><span class="toclist-text">3.2 Field 类方法</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#3-3-私有域属性的获取和设置"><span class="toclist-text">3.3 私有域属性的获取和设置</span></a></li></ol></li><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#四、Method-类"><span class="toclist-text">四、Method 类</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#4-1-获取-Method"><span class="toclist-text">4.1 获取 Method</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#4-2-Method-类方法"><span class="toclist-text">4.2 Method 类方法</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#4-3-通过反射打印类方法"><span class="toclist-text">4.3 通过反射打印类方法</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#4-4-通过反射调用类方法"><span class="toclist-text">4.4 通过反射调用类方法</span></a></li></ol></li><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#五、Constructor-类"><span class="toclist-text">五、Constructor 类</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#5-1-获取构造方法"><span class="toclist-text">5.1 获取构造方法</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#5-2-Constructor-方法"><span class="toclist-text">5.2 Constructor 方法</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#5-3-通过-Constructor-实例化对象"><span class="toclist-text">5.3 通过 Constructor 实例化对象</span></a></li></ol></li><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#六、获取父类和实现接口"><span class="toclist-text">六、获取父类和实现接口</span></a></li></ol></div></details></div></div><div class="footer"><div class="p"> <span> CC-BY-SA-3.0 for the entire station </span><i class="fa fa-star"></i><span> JayWong</span></div><div class="by_farbox"><span>Powered by </span><a href="https://hexo.io/zh-cn/" target="_blank">Hexo </a><span> & </span><a href="https://github.com/Lhcfl/hexo-theme-anatolo" target="_blank">Anatolo </a></div><div class="beian"></div></div></div><div class="main"><div class="autopagerize_page_element"><div class="content"><div class="post-page"><div class="post animated fadeInDown"><div class="post-title"><h3><a>1.1.1.7【编程基础 - Java 语言 - 语言基础】反射</a></h3></div><div class="post-content"><p><h2 id="一、概述"><a href="#一、概述" class="headerlink" title="一、概述"></a>一、概述</h2><h3 id="1-1-简介"><a href="#1-1-简介" class="headerlink" title="1.1 简介"></a>1.1 简介</h3><p>能够分析类能力的程序成为反射（reflective）。反射机制的功能非常强大，它有如下功能：</p>
+<ul>
+<li>在运行时分析类的能力</li>
+<li>在运行时查看对象，例如，编写一个 <code>toString</code> 方法供所有类使用</li>
+<li>利用 Method 对象调用类方法</li>
+</ul>
+<p>反射的使用者主要是工具开发者，一般在业务代码中是使用不到的</p>
+<h3 id="1-2-类介绍"><a href="#1-2-类介绍" class="headerlink" title="1.2 类介绍"></a>1.2 类介绍</h3><p>反射相关类都在 <code>java.lang.reflect.*</code> 包下</p>
+<table>
+<thead>
+<tr>
+<th>类</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>java.lang.Class</strong></td>
+<td>类信息</td>
+</tr>
+<tr>
+<td><strong>java.lang.reflect.Method</strong></td>
+<td>类中的方法</td>
+</tr>
+<tr>
+<td><strong>java.lang.reflect.Constructor</strong></td>
+<td>类中的构造方法</td>
+</tr>
+<tr>
+<td><strong>java.lang.reflect.Field</strong></td>
+<td>类中的成员变量（静态变量 + 实例变量）</td>
+</tr>
+</tbody></table>
+<h2 id="二、Class-类"><a href="#二、Class-类" class="headerlink" title="二、Class 类"></a>二、Class 类</h2><h3 id="2-1-获取-Class"><a href="#2-1-获取-Class" class="headerlink" title="2.1 获取 Class"></a>2.1 获取 Class</h3><p>获取 <code>Class</code> 类有以下三种方式</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 1.通过 类.class 获取</span></span><br><span class="line">Class&lt;? extends String&gt; stringClass = String<span class="class">.<span class="keyword">class</span></span>;</span><br><span class="line">Class&lt;? extends Integer&gt; integerClass = <span class="keyword">int</span><span class="class">.<span class="keyword">class</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 2.通过 Class.forName() 获取</span></span><br><span class="line">Class&lt;?&gt; classForName = Class.forName(<span class="string">"java.lang.Integer"</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 3.通过 对象.getClass() 获取</span></span><br><span class="line">Long l = <span class="number">1L</span>;</span><br><span class="line">Class&lt;? extends Long&gt; longClass = l.getClass();</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-2-Class-类方法"><a href="#2-2-Class-类方法" class="headerlink" title="2.2 Class 类方法"></a>2.2 Class 类方法</h3><table>
+<thead>
+<tr>
+<th>方法名</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public T <strong>newInstance</strong>()</td>
+<td>实例化对象</td>
+</tr>
+<tr>
+<td>public String <strong>getName</strong>()</td>
+<td>返回全限定名</td>
+</tr>
+<tr>
+<td>public String <strong>getSimpleName</strong>()</td>
+<td>返回类名</td>
+</tr>
+<tr>
+<td>public Field[] <strong>getFields</strong>()</td>
+<td>返回类中 public 修饰的属性</td>
+</tr>
+<tr>
+<td>public Field[] <strong>getDeclaredFields</strong>()</td>
+<td>返回类中所有的属性</td>
+</tr>
+<tr>
+<td>public Field <strong>getDeclaredField</strong>(String name)</td>
+<td>根据属性名 name 获取指定的属性</td>
+</tr>
+<tr>
+<td>public native int <strong>getModifiers</strong>()</td>
+<td>返回此类或接口的修饰符，以整数编码。<br>修饰符由 Java 虚拟机的公共、受保护、私有、最终、静态、抽象和接口常量组成。<br>它们应该使用类 Modifier 的方法进行解码</td>
+</tr>
+<tr>
+<td>public Method[] <strong>getDeclaredMethods</strong>()</td>
+<td>返回类中所有的实例方法</td>
+</tr>
+<tr>
+<td>public Method <strong>getDeclaredMethod</strong>(String name, Class&lt;?&gt;… parameterTypes)</td>
+<td>根据方法名 name 和方法形参获取指定方法</td>
+</tr>
+<tr>
+<td>public Constructor&lt;?&gt;[] <strong>getDeclaredConstructors</strong>()</td>
+<td>返回类中所有的构造方法</td>
+</tr>
+<tr>
+<td>public Constructor <strong>getDeclaredConstructor</strong>(Class&lt;?&gt;… parameterTypes)</td>
+<td>根据方法形参获取指定的构造方法</td>
+</tr>
+<tr>
+<td>public native Class&lt;? super T&gt; <strong>getSuperclass</strong>()</td>
+<td>返回调用类的父类</td>
+</tr>
+<tr>
+<td>public Class&lt;?&gt;[] <strong>getInterfaces</strong>()</td>
+<td>返回调用类实现的接口集合</td>
+</tr>
+</tbody></table>
+<h2 id="三、Field-类"><a href="#三、Field-类" class="headerlink" title="三、Field 类"></a>三、Field 类</h2><h3 id="3-1-获取-Field"><a href="#3-1-获取-Field" class="headerlink" title="3.1 获取 Field"></a>3.1 获取 Field</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Data</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> String a, b, c;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        A a = <span class="keyword">new</span> A();</span><br><span class="line">        <span class="comment">// 获取所有属性</span></span><br><span class="line">        Field[] declaredFields = a.getClass().getDeclaredFields();</span><br><span class="line">        <span class="keyword">for</span> (Field field : declaredFields) &#123;</span><br><span class="line">            System.out.println(String.format(<span class="string">"Field name: %s"</span>, field.getName()));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出结果</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Field name: a</span><br><span class="line">Field name: b</span><br><span class="line">Field name: c</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-2-Field-类方法"><a href="#3-2-Field-类方法" class="headerlink" title="3.2 Field 类方法"></a>3.2 Field 类方法</h3><table>
+<thead>
+<tr>
+<th>方法名</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public String <strong>getName()</strong></td>
+<td>获取属性名</td>
+</tr>
+<tr>
+<td>public int <strong>getModifiers</strong>()</td>
+<td>返回此类或接口的修饰符，以整数编码。<br>修饰符由 Java 虚拟机的公共、受保护、私有、最终、静态、抽象和接口常量组成。<br>它们应该使用类 Modifier 的方法进行解码</td>
+</tr>
+<tr>
+<td>public Class&lt;?&gt; <strong>getType</strong>()</td>
+<td>获取属性的 Class 类</td>
+</tr>
+<tr>
+<td>public void <strong>set</strong>(Object obj, Object value)</td>
+<td>设置属性值</td>
+</tr>
+<tr>
+<td>public Object <strong>get</strong>(Object obj)</td>
+<td>获取属性值</td>
+</tr>
+<tr>
+<td>public void <strong>setAccessible</strong>(boolean flag)</td>
+<td>将此对象的可访问标志设置为指示的布尔值。<br>值 true 表示反射对象在使用时应禁止 Java 语言访问检查。<br>值 false 表示反射的对象应该强制执行 Java 语言访问检查</td>
+</tr>
+</tbody></table>
+<h3 id="3-3-私有域属性的获取和设置"><a href="#3-3-私有域属性的获取和设置" class="headerlink" title="3.3 私有域属性的获取和设置"></a>3.3 私有域属性的获取和设置</h3><p>在对私有域的属性进行 <code>set</code> 和 <code>get</code> 操作时，需要调用 <code>setAccessible</code> 将此对象的可访问标志设置为 <code>true</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Data</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> String a, b, c;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@SneakyThrows</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        A a = <span class="keyword">new</span> A();</span><br><span class="line">        <span class="comment">// 获取所有属性</span></span><br><span class="line">        Field[] declaredFields = a.getClass().getDeclaredFields();</span><br><span class="line">        <span class="keyword">for</span> (Field field : declaredFields) &#123;</span><br><span class="line">            <span class="keyword">if</span> (Objects.equals(field.getType(), String<span class="class">.<span class="keyword">class</span>)) </span>&#123;</span><br><span class="line">                String str = <span class="string">"val: "</span> + UUID.randomUUID();</span><br><span class="line">                field.setAccessible(Boolean.TRUE);</span><br><span class="line">                field.set(a, str);</span><br><span class="line">                System.out.println(field.get(a));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        System.out.println(JSONObject.toJSONString(a));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出结果</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">val: 9f43a1f8-46b1-4578-8f40-3e7766f64f65</span><br><span class="line">val: a1f4b6e9-a9ef-4624-bbbb-2e17f22dac30</span><br><span class="line">val: 95886f23-31f5-45b8-867a-1b49d379270e</span><br><span class="line">&#123;"a":"val: 9f43a1f8-46b1-4578-8f40-3e7766f64f65","b":"val: a1f4b6e9-a9ef-4624-bbbb-2e17f22dac30","c":"val: 95886f23-31f5-45b8-867a-1b49d379270e"&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="四、Method-类"><a href="#四、Method-类" class="headerlink" title="四、Method 类"></a>四、Method 类</h2><h3 id="4-1-获取-Method"><a href="#4-1-获取-Method" class="headerlink" title="4.1 获取 Method"></a>4.1 获取 Method</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">@Data</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span> </span>&#123;</span><br><span class="line">    private <span class="built_in">String</span> a, b, c;</span><br><span class="line"></span><br><span class="line">    @SneakyThrows</span><br><span class="line">    public <span class="keyword">static</span> <span class="keyword">void</span> main(<span class="built_in">String</span>[] args) &#123;</span><br><span class="line">        A a = <span class="keyword">new</span> A();</span><br><span class="line">        <span class="comment">// 获取所有方法</span></span><br><span class="line">        Method[] declaredMethods = a.getClass().getDeclaredMethods();</span><br><span class="line">        <span class="keyword">for</span> (Method method : declaredMethods) &#123;</span><br><span class="line">            System.out.println(<span class="built_in">String</span>.format(<span class="string">"Method name: %s"</span>, method.getName()));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出结果</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Method name: main</span><br><span class="line">Method name: equals</span><br><span class="line">Method name: toString</span><br><span class="line">Method name: hashCode</span><br><span class="line">Method name: getB</span><br><span class="line">Method name: setC</span><br><span class="line">Method name: getC</span><br><span class="line">Method name: canEqual</span><br><span class="line">Method name: setB</span><br><span class="line">Method name: setA</span><br><span class="line">Method name: getA</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-2-Method-类方法"><a href="#4-2-Method-类方法" class="headerlink" title="4.2 Method 类方法"></a>4.2 Method 类方法</h3><table>
+<thead>
+<tr>
+<th>方法名</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public String <strong>getName()</strong></td>
+<td>获取方法名</td>
+</tr>
+<tr>
+<td>public int <strong>getModifiers</strong>()</td>
+<td>返回此方法的修饰符，以整数编码。<br>修饰符由 Java 虚拟机的公共、受保护、私有、最终、静态、抽象和接口常量组成。<br>它们应该使用类 Modifier 的方法进行解码</td>
+</tr>
+<tr>
+<td>public Class&lt;?&gt; <strong>getReturnType</strong>()</td>
+<td>获取方法返回值的 Class 类</td>
+</tr>
+<tr>
+<td>public Class&lt;?&gt;[] <strong>getParameterTypes</strong>()</td>
+<td>获取参数列表</td>
+</tr>
+<tr>
+<td>public Object <strong>invoke</strong>(Object obj, Object… args)</td>
+<td>调用方法</td>
+</tr>
+<tr>
+<td>public void <strong>setAccessible</strong>(boolean flag)</td>
+<td>将此对象的可访问标志设置为指示的布尔值。<br>值 true 表示反射对象在使用时应禁止 Java 语言访问检查。<br>值 false 表示反射的对象应该强制执行 Java 语言访问检查</td>
+</tr>
+</tbody></table>
+<h3 id="4-3-通过反射打印类方法"><a href="#4-3-通过反射打印类方法" class="headerlink" title="4.3 通过反射打印类方法"></a>4.3 通过反射打印类方法</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Data</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> String a, b, c;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@SneakyThrows</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        A a = <span class="keyword">new</span> A();</span><br><span class="line">        <span class="comment">// 获取所有方法</span></span><br><span class="line">        Method[] declaredMethods = a.getClass().getDeclaredMethods();</span><br><span class="line">        <span class="keyword">for</span> (Method method : declaredMethods) &#123;</span><br><span class="line">            StringBuilder desc = <span class="keyword">new</span> StringBuilder();</span><br><span class="line">            <span class="comment">// 方法修饰符</span></span><br><span class="line">            desc.append(Modifier.toString(method.getModifiers())).append(<span class="string">" "</span>);</span><br><span class="line">            <span class="comment">// 方法返回值</span></span><br><span class="line">            desc.append(method.getReturnType().getSimpleName()).append(<span class="string">" "</span>);</span><br><span class="line">            <span class="comment">// 方法名</span></span><br><span class="line">            desc.append(method.getName()).append(<span class="string">"("</span>);</span><br><span class="line">            <span class="comment">// 入参列表</span></span><br><span class="line">            Class&lt;?&gt;[] parameterTypes = method.getParameterTypes();</span><br><span class="line">            <span class="keyword">if</span> (ArrayUtils.isNotEmpty(parameterTypes)) &#123;</span><br><span class="line">                <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; parameterTypes.length; i++)&#123;</span><br><span class="line">                    desc.append(parameterTypes[i].getSimpleName());</span><br><span class="line">                    <span class="keyword">if</span> (i != parameterTypes.length - <span class="number">1</span>) &#123;</span><br><span class="line">                        desc.append(<span class="string">", "</span>);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// 结束</span></span><br><span class="line">            desc.append(<span class="string">")"</span>);</span><br><span class="line">            <span class="comment">// 输出</span></span><br><span class="line">            System.out.println(desc.toString());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出结果</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">public static void main(String[])</span><br><span class="line">public boolean equals(Object)</span><br><span class="line">public String toString()</span><br><span class="line">public int hashCode()</span><br><span class="line">public void setA(String)</span><br><span class="line">public void setB(String)</span><br><span class="line">public String getB()</span><br><span class="line">public String getC()</span><br><span class="line">protected boolean canEqual(Object)</span><br><span class="line">public void setC(String)</span><br><span class="line">public String getA()</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-4-通过反射调用类方法"><a href="#4-4-通过反射调用类方法" class="headerlink" title="4.4 通过反射调用类方法"></a>4.4 通过反射调用类方法</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">A a = <span class="keyword">new</span> A();</span><br><span class="line"><span class="comment">// 获取所有方法</span></span><br><span class="line">Method setA = A.class.getMethod("setA", String.class);</span><br><span class="line">Method getA = a.getClass().getMethod(<span class="string">"getA"</span>);</span><br><span class="line">setA.invoke(a, <span class="string">"reflect.setA"</span>);</span><br><span class="line"><span class="comment">// 输出结果：reflect.setA</span></span><br><span class="line">System.out.println(getA.invoke(a));</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="五、Constructor-类"><a href="#五、Constructor-类" class="headerlink" title="五、Constructor 类"></a>五、Constructor 类</h2><h3 id="5-1-获取构造方法"><a href="#5-1-获取构造方法" class="headerlink" title="5.1 获取构造方法"></a>5.1 获取构造方法</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 获取 Integer 所有构造方法</span></span><br><span class="line">Constructor&lt;?&gt;[] constructors = Integer<span class="class">.<span class="keyword">class</span>.<span class="title">getConstructors</span>()</span>;</span><br><span class="line"><span class="keyword">for</span> (Constructor&lt;?&gt; constructor : constructors) &#123;</span><br><span class="line">    StringBuilder desc = <span class="keyword">new</span> StringBuilder();</span><br><span class="line">    <span class="comment">// 方法修饰符</span></span><br><span class="line">    desc.append(Modifier.toString(constructor.getModifiers())).append(<span class="string">" "</span>);</span><br><span class="line">    <span class="comment">// 方法名</span></span><br><span class="line">    desc.append(constructor.getName()).append(<span class="string">"("</span>);</span><br><span class="line">    <span class="comment">// 入参列表</span></span><br><span class="line">    Class&lt;?&gt;[] parameterTypes = constructor.getParameterTypes();</span><br><span class="line">    <span class="keyword">if</span> (ArrayUtils.isNotEmpty(parameterTypes)) &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; parameterTypes.length; i++)&#123;</span><br><span class="line">            desc.append(parameterTypes[i].getSimpleName());</span><br><span class="line">            <span class="keyword">if</span> (i != parameterTypes.length - <span class="number">1</span>) &#123;</span><br><span class="line">                desc.append(<span class="string">", "</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 结束</span></span><br><span class="line">    desc.append(<span class="string">")"</span>);</span><br><span class="line">    <span class="comment">// 输出</span></span><br><span class="line">    System.out.println(desc.toString());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出结果</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">public java.lang.Integer(int)</span><br><span class="line">public java.lang.Integer(String)</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-2-Constructor-方法"><a href="#5-2-Constructor-方法" class="headerlink" title="5.2 Constructor 方法"></a>5.2 Constructor 方法</h3><table>
+<thead>
+<tr>
+<th>方法名</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public String <strong>getName()</strong></td>
+<td>获取构造方法名</td>
+</tr>
+<tr>
+<td>public int <strong>getModifiers</strong>()</td>
+<td>返回此构造方法的修饰符，以整数编码。<br>修饰符由 Java 虚拟机的公共、受保护、私有、最终、静态、抽象和接口常量组成。<br>它们应该使用类 Modifier 的方法进行解码</td>
+</tr>
+<tr>
+<td>public Class&lt;?&gt;[] <strong>getParameterTypes</strong>()</td>
+<td>获取构造方法参数列表</td>
+</tr>
+<tr>
+<td>public T <strong>newInstance</strong>(Object … initargs)</td>
+<td>获取参数列表</td>
+</tr>
+</tbody></table>
+<h3 id="5-3-通过-Constructor-实例化对象"><a href="#5-3-通过-Constructor-实例化对象" class="headerlink" title="5.3 通过 Constructor 实例化对象"></a>5.3 通过 Constructor 实例化对象</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 获取所有构造方法</span></span><br><span class="line">Constructor&lt;Double&gt; constructor = Double<span class="class">.<span class="keyword">class</span>.<span class="title">getConstructor</span>(<span class="title">String</span>.<span class="title">class</span>)</span>;</span><br><span class="line">Double aDouble = constructor.newInstance(<span class="string">"123.123"</span>);</span><br><span class="line"><span class="comment">// 输出结果：123.123</span></span><br><span class="line">System.out.println(aDouble);</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="六、获取父类和实现接口"><a href="#六、获取父类和实现接口" class="headerlink" title="六、获取父类和实现接口"></a>六、获取父类和实现接口</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Class&lt;? extends ArrayList&gt; arrayListClass = ArrayList<span class="class">.<span class="keyword">class</span></span>;</span><br><span class="line">Class&lt;?&gt; superclass = arrayListClass.getSuperclass();</span><br><span class="line">System.out.println(String.format(<span class="string">"Super class name: %s"</span>, superclass.getName()));</span><br><span class="line">Class&lt;?&gt;[] interfaces = arrayListClass.getInterfaces();</span><br><span class="line"><span class="keyword">if</span> (ArrayUtils.isNotEmpty(interfaces)) &#123;</span><br><span class="line">    <span class="keyword">for</span> (Class&lt;?&gt; anInterface : interfaces) &#123;</span><br><span class="line">        System.out.println(String.format(<span class="string">"Interface name: %s"</span>, anInterface.getName()));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出结果</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Super class name: java.util.AbstractList</span><br><span class="line">Interface name: java.util.List</span><br><span class="line">Interface name: java.util.RandomAccess</span><br><span class="line">Interface name: java.lang.Cloneable</span><br><span class="line">Interface name: java.io.Serializable</span><br></pre></td></tr></table></figure>
+
+</p></div><div class="post-footer"><div class="meta"><div class="info"><i class="fa fa-sun-o"></i><span class="date">2022-10-22</span><a class="tag" href="/categories/反射/" title="反射">反射 </a><i class="fa fa-tag"></i><a class="tag" href="/tags/【Java语言基础】/" title="【Java语言基础】">【Java语言基础】 </a><span class="leancloud_visitors"></span><span>About 1786 words, 5 min 57 sec  read</span></div></div></div></div><div class="share"><div class="evernote"><a class="fa fa-bookmark" href="" onclick="javascript:join_favorite()" ref="sidebar"></a></div><div class="weibo"><a class="fa fa-weibo" href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));"></a></div><div class="twitter"><a class="fa fa-twitter" href="http://twitter.com/intent/tweet?text=I%20have%20found%20a%20great%20blog.%0A%0AJayWong%20%C2%B7%201.1.1.7%E3%80%90%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80%20-%20Java%20%E8%AF%AD%E8%A8%80%20-%20%E8%AF%AD%E8%A8%80%E5%9F%BA%E7%A1%80%E3%80%91%E5%8F%8D%E5%B0%84%0Ahttp://yoursite.com/2022/10/22/1.%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/1.1%20Java%20%E8%AF%AD%E8%A8%80/1.1.1%20%E8%AF%AD%E8%A8%80%E5%9F%BA%E7%A1%80/1.1.1.7%20%E5%8F%8D%E5%B0%84/%0A" target="_blank" rel="noopener"></a></div></div><div class="pagination"><ul class="clearfix"><li class="pre pagbuttons"><a class="btn" role="navigation" href="/2022/10/22/1.%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/1.1%20Java%20%E8%AF%AD%E8%A8%80/1.1.1%20%E8%AF%AD%E8%A8%80%E5%9F%BA%E7%A1%80/1.1.1.8%20%E6%B3%A8%E8%A7%A3/" title="1.1.1.8【编程基础 - Java 语言 - 语言基础】注解">Previous</a></li><li class="next pagbuttons"><a class="btn" role="navigation" href="/2022/10/22/1.%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/1.1%20Java%20%E8%AF%AD%E8%A8%80/1.1.1%20%E8%AF%AD%E8%A8%80%E5%9F%BA%E7%A1%80/1.1.1.6%20%E6%B3%9B%E5%9E%8B/" title="1.1.1.6【编程基础 - Java 语言 - 语言基础】泛型">Next</a></li></ul></div><script src="/js/visitors.js"></script></div></div></div></div><script src="/js/darkLightToggle.js"></script><script src="/js/jquery-migrate-1.2.1.min.js"></script><script src="/js/jquery.appear.js"></script><script src="/js/add-bookmark.js"></script><script>(function(window){var INSIGHT_CONFIG={TRANSLATION:{POSTS:"Posts",PAGES:"Pages",CATEGORIES:"Categories",TAGS:"Tags",UNTITLED:"(Untitled)",},CONTENT_URL:"/content.json",};window.INSIGHT_CONFIG=INSIGHT_CONFIG})(window);</script><script src="/js/insight.js" defer></script><div class="searchbox ins-search"><div class="searchbox-container ins-search-container"><div class="searchbox-input-wrapper"><input class="searchbox-input ins-search-input" type="text" placeholder="Search..."><span class="searchbox-close"><a class="fa fa-times-circle" onclick="closeWindow();"></a></span></div><div class="searchbox-result-wrapper ins-section-wrapper"><div class="ins-section-container"><p>Seraching...</p></div></div></div></div></body></html>

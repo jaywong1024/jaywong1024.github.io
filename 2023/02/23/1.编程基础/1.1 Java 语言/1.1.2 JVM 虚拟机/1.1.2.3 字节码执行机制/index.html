@@ -1,0 +1,807 @@
+<!DOCTYPE html><html lang="zh-CN" id="theme-dark-mode"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><meta name="author" content="JayWong"><title>1.1.2.3【编程基础 - Java 语言 - JVM 虚拟机】字节码执行机制 · JayWong</title><meta name="description" content="Java 语言是一门编译型语言，编写的 Java 程序需要经过编译器编译成二进制字节码文件，然后由 Java 虚拟机来执行这些字节码。Java 字节码执行机制是 Java 程序运行的基础
+一、字节码文件Java 字节码文件是 Java 程序编译后生成的二进制文件，它包含了 Java 程序中的所有信息"><meta name="keywords" content="Blog,JayWong,Hexo"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="renderer" content="webkit"><link rel="shortcut icon" type="image/x-icon" href="/images/java.jpeg"><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/blog_basic.css"><link rel="stylesheet" href="/css/font-awesome.min.css"><link rel="stylesheet" href="/css/insight.css"><link rel="stylesheet" href="/css/search.css"><link rel="alternate" type="application/atom+xml" title="ATOM 1.0" href="/atom.xml"><script src="/js/jquery.js"></script><meta name="generator" content="Hexo 4.2.1"></head><body><div class="page-top animated fadeInDown"><div class="nav"><li> <a href="/">Home</a></li><li> <a href="/archives">Archives</a></li><li> <a href="/tags">Tags</a></li><li> <a href="/about">About</a></li><li> <a href="/links">Links</a></li></div><div class="information"><div class="nav_right_btn"><li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li><li><a class="fa fa-search" onclick="openWindow();"></a></li></div><div class="avatar"><img src="/images/java.jpeg"></div></div></div><div class="toc-container in-page animated fadeInDown"><details class="ltr toc-toggle"><summary>Menu</summary><div class="tocmenu"><ol class="toclist"><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#一、字节码文件"><span class="toclist-text">一、字节码文件</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-1-魔数（4个字节）"><span class="toclist-text">1.1 魔数（4个字节）</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-2-版本号（4个字节）"><span class="toclist-text">1.2 版本号（4个字节）</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-3-常量池（N个字节）"><span class="toclist-text">1.3 常量池（N个字节）</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-3-1-常量池计数（2个字节）"><span class="toclist-text">1.3.1 常量池计数（2个字节）</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-3-2-常量池查询表"><span class="toclist-text">1.3.2 常量池查询表</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-3-3-标识字符表"><span class="toclist-text">1.3.3 标识字符表</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-3-4-查看常量池"><span class="toclist-text">1.3.4 查看常量池</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-3-5-字节码工具"><span class="toclist-text">1.3.5 字节码工具</span></a></li></ol></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-4-访问标志（2个字节）"><span class="toclist-text">1.4 访问标志（2个字节）</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-5-类信息（4个字节）"><span class="toclist-text">1.5 类信息（4个字节）</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-6-接口（N个字节）"><span class="toclist-text">1.6 接口（N个字节）</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-7-字段（N个字节）"><span class="toclist-text">1.7 字段（N个字节）</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-7-1-字段计数（2个字节）"><span class="toclist-text">1.7.1 字段计数（2个字节）</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-7-2-字段结构（8个字节）"><span class="toclist-text">1.7.2 字段结构（8个字节）</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-7-3-字段访问标志"><span class="toclist-text">1.7.3 字段访问标志</span></a></li></ol></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-8-方法（N个字节）"><span class="toclist-text">1.8 方法（N个字节）</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-8-1-方法计数（2个字节）"><span class="toclist-text">1.8.1 方法计数（2个字节）</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-8-2-方法结构"><span class="toclist-text">1.8.2 方法结构</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-8-3-方法访问标志"><span class="toclist-text">1.8.3 方法访问标志</span></a></li></ol></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-9-属性（N个字节）"><span class="toclist-text">1.9 属性（N个字节）</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-9-1-属性计数（2个字节）"><span class="toclist-text">1.9.1 属性计数（2个字节）</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-9-2-属性结构"><span class="toclist-text">1.9.2 属性结构</span></a></li></ol></li></ol></li><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#二、字节码执行过程"><span class="toclist-text">二、字节码执行过程</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#2-1-细节待补充"><span class="toclist-text">2.1 细节待补充</span></a></li></ol></li><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#三、字节码执行优化"><span class="toclist-text">三、字节码执行优化</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#3-1-细节待补充"><span class="toclist-text">3.1 细节待补充</span></a></li></ol></li><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#四、总结"><span class="toclist-text">四、总结</span></a></li></ol></div></details></div><div class="sidebar animated fadeInDown"><div class="sidebar-top"><div class="logo-title"><div class="title"><img src="/images/themes/logo@2x.png" style="width:220px;" alt="favicon"><h3 title=""><a href="/">JayWong</a></h3><div class="description"><p>今、頑張って日本語の勉強をしています</p></div></div><ul class="social-links"><li><a href="https://github.com/Lhcfl" target="_blank" rel="noopener"><i class="fa fa-github"></i></a></li><li><a href="mailto:yourname@example.com"><i class="fa fa-envelope"></i></a></li></ul></div><div class="toc-container in-sidebar"><details class="ltr" open><summary>Menu</summary><div class="tocmenu"><ol class="toclist"><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#一、字节码文件"><span class="toclist-text">一、字节码文件</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-1-魔数（4个字节）"><span class="toclist-text">1.1 魔数（4个字节）</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-2-版本号（4个字节）"><span class="toclist-text">1.2 版本号（4个字节）</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-3-常量池（N个字节）"><span class="toclist-text">1.3 常量池（N个字节）</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-3-1-常量池计数（2个字节）"><span class="toclist-text">1.3.1 常量池计数（2个字节）</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-3-2-常量池查询表"><span class="toclist-text">1.3.2 常量池查询表</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-3-3-标识字符表"><span class="toclist-text">1.3.3 标识字符表</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-3-4-查看常量池"><span class="toclist-text">1.3.4 查看常量池</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-3-5-字节码工具"><span class="toclist-text">1.3.5 字节码工具</span></a></li></ol></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-4-访问标志（2个字节）"><span class="toclist-text">1.4 访问标志（2个字节）</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-5-类信息（4个字节）"><span class="toclist-text">1.5 类信息（4个字节）</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-6-接口（N个字节）"><span class="toclist-text">1.6 接口（N个字节）</span></a></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-7-字段（N个字节）"><span class="toclist-text">1.7 字段（N个字节）</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-7-1-字段计数（2个字节）"><span class="toclist-text">1.7.1 字段计数（2个字节）</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-7-2-字段结构（8个字节）"><span class="toclist-text">1.7.2 字段结构（8个字节）</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-7-3-字段访问标志"><span class="toclist-text">1.7.3 字段访问标志</span></a></li></ol></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-8-方法（N个字节）"><span class="toclist-text">1.8 方法（N个字节）</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-8-1-方法计数（2个字节）"><span class="toclist-text">1.8.1 方法计数（2个字节）</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-8-2-方法结构"><span class="toclist-text">1.8.2 方法结构</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-8-3-方法访问标志"><span class="toclist-text">1.8.3 方法访问标志</span></a></li></ol></li><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#1-9-属性（N个字节）"><span class="toclist-text">1.9 属性（N个字节）</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-9-1-属性计数（2个字节）"><span class="toclist-text">1.9.1 属性计数（2个字节）</span></a></li><li class="toclist-item toclist-level-4"><a class="toclist-link" href="#1-9-2-属性结构"><span class="toclist-text">1.9.2 属性结构</span></a></li></ol></li></ol></li><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#二、字节码执行过程"><span class="toclist-text">二、字节码执行过程</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#2-1-细节待补充"><span class="toclist-text">2.1 细节待补充</span></a></li></ol></li><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#三、字节码执行优化"><span class="toclist-text">三、字节码执行优化</span></a><ol class="toclist-child"><li class="toclist-item toclist-level-3"><a class="toclist-link" href="#3-1-细节待补充"><span class="toclist-text">3.1 细节待补充</span></a></li></ol></li><li class="toclist-item toclist-level-2"><a class="toclist-link" href="#四、总结"><span class="toclist-text">四、总结</span></a></li></ol></div></details></div></div><div class="footer"><div class="p"> <span> CC-BY-SA-3.0 for the entire station </span><i class="fa fa-star"></i><span> JayWong</span></div><div class="by_farbox"><span>Powered by </span><a href="https://hexo.io/zh-cn/" target="_blank">Hexo </a><span> & </span><a href="https://github.com/Lhcfl/hexo-theme-anatolo" target="_blank">Anatolo </a></div><div class="beian"></div></div></div><div class="main"><div class="autopagerize_page_element"><div class="content"><div class="post-page"><div class="post animated fadeInDown"><div class="post-title"><h3><a>1.1.2.3【编程基础 - Java 语言 - JVM 虚拟机】字节码执行机制</a></h3></div><div class="post-content"><p><p>Java 语言是一门编译型语言，编写的 Java 程序需要经过编译器编译成二进制字节码文件，然后由 Java 虚拟机来执行这些字节码。Java 字节码执行机制是 Java 程序运行的基础</p>
+<h2 id="一、字节码文件"><a href="#一、字节码文件" class="headerlink" title="一、字节码文件"></a>一、字节码文件</h2><p>Java 字节码文件是 Java 程序编译后生成的二进制文件，它包含了 Java 程序中的所有信息，包括变量、方法、类等。Java字节码具有跨平台的特性，可以在不同的操作系统和硬件平台上运行</p>
+<p>本文使用如下代码编译后的字节码文件作为演示</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 编译后 TestApi.class</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">TestApi</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">a</span><span class="params">()</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">b</span><span class="params">()</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">c</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 编译后 Test.class</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> <span class="keyword">implements</span> <span class="title">TestApi</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Test test = <span class="keyword">new</span> Test();</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> a = test.a();</span><br><span class="line">        System.out.println(a);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">a</span><span class="params">()</span> </span>&#123; <span class="keyword">return</span> <span class="keyword">this</span>.b(); &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">b</span><span class="params">()</span> </span>&#123; <span class="keyword">return</span> <span class="keyword">this</span>.c(); &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">c</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> a = <span class="number">10</span>, b = <span class="number">20</span>, c = <span class="number">30</span>;</span><br><span class="line">        <span class="keyword">return</span> a + b + c;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>例如上面这段 Java 代码中的 <code>Test</code> 类，它编译后的字节码文件 <strong>Test.class</strong> 如下（使用 Sublime 插件 HexViewer 展示）。可以看到字节码文件是由 16 进制的数字组成的，具体的文件结构可以看下面的表格和描述</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">00000000:  cafe babe 0000 0034 0033 0a00 0a00 2109 0008 0022 0a00 0800  :.......4.3....!....&quot;....</span><br><span class="line">00000018:  2309 0024 0025 0a00 2600 270a 0008 0028 0a00 0800 2907 002a  :#..$.%..&amp;.&#39;....(....)..*</span><br><span class="line">00000030:  0a00 0800 2107 002b 0700 2c01 0004 7465 7374 0100 1f4c 746f  :....!..+..,...test...Lto</span><br><span class="line">00000048:  702f 6861 6e6a 6965 2f6a 766d 2f63 6c61 7373 696e 666f 2f54  :p&#x2F;hanjie&#x2F;jvm&#x2F;classinfo&#x2F;T</span><br><span class="line">00000060:  6573 743b 0100 063c 696e 6974 3e01 0003 2829 5601 0004 436f  :est;...&lt;init&gt;...()V...Co</span><br><span class="line">00000078:  6465 0100 0f4c 696e 654e 756d 6265 7254 6162 6c65 0100 124c  :de...LineNumberTable...L</span><br><span class="line">00000090:  6f63 616c 5661 7269 6162 6c65 5461 626c 6501 0004 7468 6973  :ocalVariableTable...this</span><br><span class="line">000000a8:  0100 046d 6169 6e01 0016 285b 4c6a 6176 612f 6c61 6e67 2f53  :...main...([Ljava&#x2F;lang&#x2F;S</span><br><span class="line">000000c0:  7472 696e 673b 2956 0100 0461 7267 7301 0013 5b4c 6a61 7661  :tring;)V...args...[Ljava</span><br><span class="line">000000d8:  2f6c 616e 672f 5374 7269 6e67 3b01 0001 6101 0001 4901 0010  :&#x2F;lang&#x2F;String;...a...I...</span><br><span class="line">000000f0:  4d65 7468 6f64 5061 7261 6d65 7465 7273 0100 0328 2949 0100  :MethodParameters...()I..</span><br><span class="line">00000108:  0162 0100 0163 0100 083c 636c 696e 6974 3e01 000a 536f 7572  :.b...c...&lt;clinit&gt;...Sour</span><br><span class="line">00000120:  6365 4669 6c65 0100 0954 6573 742e 6a61 7661 0c00 0e00 0f0c  :ceFile...Test.java......</span><br><span class="line">00000138:  000c 000d 0c00 1800 1b07 002d 0c00 2e00 2f07 0030 0c00 3100  :...........-....&#x2F;..0..1.</span><br><span class="line">00000150:  320c 001c 001b 0c00 1d00 1b01 001d 746f 702f 6861 6e6a 6965  :2.............top&#x2F;hanjie</span><br><span class="line">00000168:  2f6a 766d 2f63 6c61 7373 696e 666f 2f54 6573 7401 0010 6a61  :&#x2F;jvm&#x2F;classinfo&#x2F;Test...ja</span><br><span class="line">00000180:  7661 2f6c 616e 672f 4f62 6a65 6374 0100 2074 6f70 2f68 616e  :va&#x2F;lang&#x2F;Object.. top&#x2F;han</span><br><span class="line">00000198:  6a69 652f 6a76 6d2f 636c 6173 7369 6e66 6f2f 5465 7374 4170  :jie&#x2F;jvm&#x2F;classinfo&#x2F;TestAp</span><br><span class="line">000001b0:  6901 0010 6a61 7661 2f6c 616e 672f 5379 7374 656d 0100 036f  :i...java&#x2F;lang&#x2F;System...o</span><br><span class="line">000001c8:  7574 0100 154c 6a61 7661 2f69 6f2f 5072 696e 7453 7472 6561  :ut...Ljava&#x2F;io&#x2F;PrintStrea</span><br><span class="line">000001e0:  6d3b 0100 136a 6176 612f 696f 2f50 7269 6e74 5374 7265 616d  :m;...java&#x2F;io&#x2F;PrintStream</span><br><span class="line">000001f8:  0100 0770 7269 6e74 6c6e 0100 0428 4929 5600 2100 0800 0a00  :...println...(I)V.!.....</span><br><span class="line">00000210:  0100 0b00 0100 1a00 0c00 0d00 0000 0600 0100 0e00 0f00 0100  :........................</span><br><span class="line">00000228:  1000 0000 2f00 0100 0100 0000 052a b700 01b1 0000 0002 0011  :....&#x2F;........*..........</span><br><span class="line">00000240:  0000 0006 0001 0000 000a 0012 0000 000c 0001 0000 0005 0013  :........................</span><br><span class="line">00000258:  000d 0000 0009 0014 0015 0002 0010 0000 004b 0002 0002 0000  :.................K......</span><br><span class="line">00000270:  000f b200 02b6 0003 3cb2 0004 1bb6 0005 b100 0000 0200 1100  :........&lt;...............</span><br><span class="line">00000288:  0000 0e00 0300 0000 0f00 0700 1000 0e00 1100 1200 0000 1600  :........................</span><br><span class="line">000002a0:  0200 0000 0f00 1600 1700 0000 0700 0800 1800 1900 0100 1a00  :........................</span><br><span class="line">000002b8:  0000 0501 0016 0000 0001 0018 001b 0001 0010 0000 002f 0001  :.....................&#x2F;..</span><br><span class="line">000002d0:  0001 0000 0005 2ab6 0006 ac00 0000 0200 1100 0000 0600 0100  :......*.................</span><br><span class="line">000002e8:  0000 1400 1200 0000 0c00 0100 0000 0500 1300 0d00 0000 0100  :........................</span><br><span class="line">00000300:  1c00 1b00 0100 1000 0000 2f00 0100 0100 0000 052a b600 07ac  :..........&#x2F;........*....</span><br><span class="line">00000318:  0000 0002 0011 0000 0006 0001 0000 0016 0012 0000 000c 0001  :........................</span><br><span class="line">00000330:  0000 0005 0013 000d 0000 0001 001d 001b 0001 0010 0000 005b  :.......................[</span><br><span class="line">00000348:  0002 0004 0000 000f 100a 3c10 143d 101e 3e1b 1c60 1d60 ac00  :..........&lt;..&#x3D;..&gt;..&#96;.&#96;..</span><br><span class="line">00000360:  0000 0200 1100 0000 0a00 0200 0000 1900 0900 1a00 1200 0000  :........................</span><br><span class="line">00000378:  2a00 0400 0000 0f00 1300 0d00 0000 0300 0c00 1800 1900 0100  :*.......................</span><br><span class="line">00000390:  0600 0900 1c00 1900 0200 0900 0600 1d00 1900 0300 0800 1e00  :........................</span><br><span class="line">000003a8:  0f00 0100 1000 0000 2300 0200 0000 0000 0bbb 0008 59b7 0009  :........#...........Y...</span><br><span class="line">000003c0:  b300 02b1 0000 0001 0011 0000 0006 0001 0000 000c 0001 001f  :........................</span><br><span class="line">000003d8:  0000 0002 0020                                               :.....</span><br></pre></td></tr></table></figure>
+
+<p>下面就是字节码文件的结构表格</p>
+<ul>
+<li>u4：占用 4 个字节</li>
+<li>u2：占用 2 个字节</li>
+<li>cp_info：常量池信息</li>
+<li>field_info：字段信息</li>
+<li>method_info：方法信息</li>
+<li>attribute_info：属性信息</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>类型</strong></th>
+<th><strong>名称</strong></th>
+<th><strong>数量</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>u4</td>
+<td>magic</td>
+<td>1</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>minor_version</td>
+<td>1</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>major_version</td>
+<td>1</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>constant_pool_count</td>
+<td>1</td>
+</tr>
+<tr>
+<td>cp_info</td>
+<td>constant_pool</td>
+<td>constant_pool_count - 1</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>access_flags</td>
+<td>1</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>this_class</td>
+<td>1</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>super_class</td>
+<td>1</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>interfaces_count</td>
+<td>1</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>interfaces</td>
+<td>interfaces_count</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>fields_count</td>
+<td>1</td>
+</tr>
+<tr>
+<td>field_info</td>
+<td>fields</td>
+<td>fields_count</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>methods_count</td>
+<td>1</td>
+</tr>
+<tr>
+<td>method_info</td>
+<td>methods</td>
+<td>methods_count</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>attributes_count</td>
+<td>1</td>
+</tr>
+<tr>
+<td>attribute_info</td>
+<td>attributes</td>
+<td>attributes_count</td>
+</tr>
+</tbody></table>
+<h3 id="1-1-魔数（4个字节）"><a href="#1-1-魔数（4个字节）" class="headerlink" title="1.1 魔数（4个字节）"></a>1.1 魔数（4个字节）</h3><p>每个 Class 的文件开始的 4 个字节被称为魔数（Magic Number），字节码值为 <strong>CAFEBABE</strong>，JVM 通过校验魔数来判断文件是否为可运行的字节码文件，这种方式比扩展名更安全</p>
+<h3 id="1-2-版本号（4个字节）"><a href="#1-2-版本号（4个字节）" class="headerlink" title="1.2 版本号（4个字节）"></a>1.2 版本号（4个字节）</h3><p>紧接着魔数的 4 个字节存储的是字节码文件的版本号，前两个字节为次版本号（Minor Version，现在基本都不用了），后两个字节为主版本号，例如上面的 <code>0000 0034</code> 转换为 10 进制为 52，52 代表此字节码文件由 JDK 8 编译而成（以此类推，51 为 JDK 7，50 为 JDK 6，53 为 JDK 9）</p>
+<h3 id="1-3-常量池（N个字节）"><a href="#1-3-常量池（N个字节）" class="headerlink" title="1.3 常量池（N个字节）"></a>1.3 常量池（N个字节）</h3><h4 id="1-3-1-常量池计数（2个字节）"><a href="#1-3-1-常量池计数（2个字节）" class="headerlink" title="1.3.1 常量池计数（2个字节）"></a>1.3.1 常量池计数（2个字节）</h4><p>在版本号之后的 2 个字节存储的是常量池计数（constant_pool_count），它用于描述常量池中常量的数量（数量为 constant_pool_count - 1，因为计数是从 1 开始算的）</p>
+<h4 id="1-3-2-常量池查询表"><a href="#1-3-2-常量池查询表" class="headerlink" title="1.3.2 常量池查询表"></a>1.3.2 常量池查询表</h4><table>
+<thead>
+<tr>
+<th>常量类型</th>
+<th>项目</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CONSTANT_Utf8_info</td>
+<td>tag</td>
+<td>u1</td>
+<td>值为 1</td>
+</tr>
+<tr>
+<td></td>
+<td>length</td>
+<td>u2</td>
+<td>UTF-8 编码的字符串长度</td>
+</tr>
+<tr>
+<td></td>
+<td>bytes</td>
+<td>u1</td>
+<td>长度为 length 的 UTF-8 编码的字符串</td>
+</tr>
+<tr>
+<td>CONSTANT_Integer_info</td>
+<td>tag</td>
+<td>u1</td>
+<td>值为 3</td>
+</tr>
+<tr>
+<td></td>
+<td>bytes</td>
+<td>u4</td>
+<td>按照高位在前存储的 int 值</td>
+</tr>
+<tr>
+<td>CONSTANT_Float_info</td>
+<td>tag</td>
+<td>u1</td>
+<td>值为 4</td>
+</tr>
+<tr>
+<td></td>
+<td>bytes</td>
+<td>u4</td>
+<td>按照高位在前存储的 float 值</td>
+</tr>
+<tr>
+<td>CONSTANT_Long_info</td>
+<td>tag</td>
+<td>u1</td>
+<td>值为 5</td>
+</tr>
+<tr>
+<td></td>
+<td>bytes</td>
+<td>u8</td>
+<td>按照高位在前存储的 long 值</td>
+</tr>
+<tr>
+<td>CONSTANT_Double_info</td>
+<td>tag</td>
+<td>u1</td>
+<td>值为 6</td>
+</tr>
+<tr>
+<td></td>
+<td>bytes</td>
+<td>u8</td>
+<td>按照高位在前存储的 double 值</td>
+</tr>
+<tr>
+<td>CONSTANT_Class_info</td>
+<td>tag</td>
+<td>u1</td>
+<td>值为 7</td>
+</tr>
+<tr>
+<td></td>
+<td>index</td>
+<td>u2</td>
+<td>指向全限定名常量项的索引</td>
+</tr>
+<tr>
+<td>CONSTANT_String_info</td>
+<td>tag</td>
+<td>u1</td>
+<td>值为 8</td>
+</tr>
+<tr>
+<td></td>
+<td>index</td>
+<td>u2</td>
+<td>指向字符串字面量的索引</td>
+</tr>
+<tr>
+<td>CONSTANT_Fieldref_info</td>
+<td>tag</td>
+<td>u1</td>
+<td>值为 9</td>
+</tr>
+<tr>
+<td></td>
+<td>index</td>
+<td>u2</td>
+<td>指向声明字段的类或者接口描述符 CONSTAN _Class_info 的索引项</td>
+</tr>
+<tr>
+<td></td>
+<td>index</td>
+<td>u2</td>
+<td>指向字段描述符 CONSTANT_NameAndType_info 的索引项</td>
+</tr>
+<tr>
+<td>CONSTANT_Methodref_info</td>
+<td>tag</td>
+<td>u1</td>
+<td>值为 10</td>
+</tr>
+<tr>
+<td></td>
+<td>index</td>
+<td>u2</td>
+<td>指向声明方法的类描述符 CONSTANT_Class_info 的索引项</td>
+</tr>
+<tr>
+<td></td>
+<td>index</td>
+<td>u2</td>
+<td>指向名称及类型描述符 CONSTANT_NameAndType_info 的索引项</td>
+</tr>
+<tr>
+<td>CONSTANT_InterfaceMethodref_info</td>
+<td>tag</td>
+<td>u1</td>
+<td>值为 11</td>
+</tr>
+<tr>
+<td></td>
+<td>index</td>
+<td>u2</td>
+<td>指向声明方法的接口描述符 CONSTANT_Class_info 的索引项</td>
+</tr>
+<tr>
+<td></td>
+<td>index</td>
+<td>u2</td>
+<td>指向名称及类型描述符 CONSTANT_NameAndType_info 的索引项</td>
+</tr>
+<tr>
+<td>CONSTANT_NameAndType_info</td>
+<td>tag</td>
+<td>u1</td>
+<td>值为 12</td>
+</tr>
+<tr>
+<td></td>
+<td>index</td>
+<td>u2</td>
+<td>指向该字段或方法名称常量项的索引</td>
+</tr>
+<tr>
+<td></td>
+<td>index</td>
+<td>u2</td>
+<td>指向该字段或方法描述符常量项的索引</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>标志</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CONSTANT_Utf8_info</td>
+<td>1</td>
+<td>UTF-8 编码的字符串</td>
+</tr>
+<tr>
+<td>CONSTANT_Integer_info</td>
+<td>3</td>
+<td>整形字面量</td>
+</tr>
+<tr>
+<td>CONSTANT_Float_info</td>
+<td>4</td>
+<td>浮点型字面量</td>
+</tr>
+<tr>
+<td>CONSTANT_Long_info</td>
+<td>5</td>
+<td>长整型字面量</td>
+</tr>
+<tr>
+<td>CONSTANT_Double_info</td>
+<td>6</td>
+<td>双精度浮点型字面量</td>
+</tr>
+<tr>
+<td>CONSTANT_Class_info</td>
+<td>7</td>
+<td>类或接口的符号引用</td>
+</tr>
+<tr>
+<td>CONSTANT_String_info</td>
+<td>8</td>
+<td>字符串类型字面量</td>
+</tr>
+<tr>
+<td>CONSTANT_Fieldref_info</td>
+<td>9</td>
+<td>字段的符号引用</td>
+</tr>
+<tr>
+<td>CONSTANT_Methodref_info</td>
+<td>10</td>
+<td>类中方法的符号引用</td>
+</tr>
+<tr>
+<td>CONSTANT_InterfaceMethodref_info</td>
+<td>11</td>
+<td>接口中方法的符号引用</td>
+</tr>
+<tr>
+<td>CONSTANT_NameAndType_info</td>
+<td>12</td>
+<td>字段或方法的部分符号引用</td>
+</tr>
+<tr>
+<td>CONSTANT_MethodHandle_info</td>
+<td>15</td>
+<td>表示方法句柄</td>
+</tr>
+<tr>
+<td>CONSTANT_MethodType_info</td>
+<td>16</td>
+<td>表示方法类型</td>
+</tr>
+<tr>
+<td>CONSTANT_Dynamic_info</td>
+<td>17</td>
+<td>表示一个动态计算常量</td>
+</tr>
+<tr>
+<td>CONSTANT_InvokeDynamic_info</td>
+<td>18</td>
+<td>表示一个动态方法调用点</td>
+</tr>
+<tr>
+<td>CONSTANT_Module_info</td>
+<td>19</td>
+<td>表示一个模块</td>
+</tr>
+<tr>
+<td>CONSTANT_Package_info</td>
+<td>20</td>
+<td>表示一个模块中开放或者导出的包</td>
+</tr>
+</tbody></table>
+<h4 id="1-3-3-标识字符表"><a href="#1-3-3-标识字符表" class="headerlink" title="1.3.3 标识字符表"></a>1.3.3 标识字符表</h4><table>
+<thead>
+<tr>
+<th>标识字符</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>B</td>
+<td>基本类型 byte</td>
+</tr>
+<tr>
+<td>C</td>
+<td>基本类型 char</td>
+</tr>
+<tr>
+<td>D</td>
+<td>基本类型 double</td>
+</tr>
+<tr>
+<td>F</td>
+<td>基本类型 float</td>
+</tr>
+<tr>
+<td>I</td>
+<td>基本类型 int</td>
+</tr>
+<tr>
+<td>J</td>
+<td>基本类型 long</td>
+</tr>
+<tr>
+<td>S</td>
+<td>基本类型 short</td>
+</tr>
+<tr>
+<td>Z</td>
+<td>基本类型 boolean</td>
+</tr>
+<tr>
+<td>V</td>
+<td>特殊类型 void</td>
+</tr>
+<tr>
+<td>L</td>
+<td>对象类型，例如 <code>Ljava/lang/Object</code></td>
+</tr>
+</tbody></table>
+<p><strong>字段或方法的部分符号引用（CONSTANT_NameAndType_info）</strong> 类型会使用到标识字符，下面给出一些例子</p>
+<ul>
+<li><code>()V</code> 表示返回值为 void 无参方法，<code>void method()</code></li>
+<li><code>(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object</code> 表示返回值为 <code>Object</code> 并且入参为两个 <code>Object</code> 的方法（注意对象类型作为参数，必须在后面添加 <code>;</code>，<code>Object method(Object obj1, Object obj2)</code></li>
+<li><code>([[I;)V</code> 表示入参为二维数组（有几个维度就加几个 <code>[</code>），返回值为 void 的方法，<code>void method(int[][] arr)</code></li>
+</ul>
+<h4 id="1-3-4-查看常量池"><a href="#1-3-4-查看常量池" class="headerlink" title="1.3.4 查看常量池"></a>1.3.4 查看常量池</h4><p>常量池计数值后就是常量值了，例如 <code>Test</code> 类的常量为 <code>0033 -&gt; 51 - 1 = 50</code> 个</p>
+<p>第 1 个常量 <strong>#1</strong> 的 tag 为 <code>0a -&gt; 10</code>，类型为 <strong>类中方法的符号引用（CONSTANT_Methodref_info）</strong>，那么可以得知长度为 <strong>u1 + u2 + u2</strong>，字节码为 <code>0a 000a 0021</code>，分析可得 <code>0a -&gt; 10, 000a -&gt; #10, 0021 -&gt; #33</code>，<strong>#1</strong> 指向 <strong>#10</strong> 和 <strong>#33</strong></p>
+<p>同理，依次找到 <strong>#10</strong>，类型为 <strong>类或接口的符号引用（CONSTANT_Class_info ）</strong>，它指 <strong>#43</strong></p>
+<ul>
+<li>得到 <strong>#43</strong> 为 <code>java/lang/Object</code></li>
+</ul>
+<p>找到 <strong>#33</strong>，类型为 <strong>字段或方法的部分符号引用（CONSTANT_NameAndType_info）</strong>，它指向 <strong>#14</strong> 和 <strong>#15</strong></p>
+<ul>
+<li>得到 <strong>#14</strong> 为 <code>&lt;init&gt;</code>， <strong>#15</strong> 为 <code>()V</code></li>
+</ul>
+<p>拼凑起来可以得到 <strong>#1</strong> 为 <code>java/lang/Object.&quot;&lt;init&gt;&quot;:()V</code>，意思就是 <code>Object</code> 类的构造方法（构造方法名称<init>），返回值为 <code>Void</code>（所有的类都是继承 <code>Object</code> 类的）</init></p>
+<p>上述查看常量的方法过于繁琐，建议使用下面的字节码工具 <strong>jclasslib</strong> 或者使用 <code>javap</code> 命令查看</p>
+<h4 id="1-3-5-字节码工具"><a href="#1-3-5-字节码工具" class="headerlink" title="1.3.5 字节码工具"></a>1.3.5 字节码工具</h4><p>可以通过 IDEA 插件 <strong>jclasslib</strong> 查看</p>
+<p><img src="https://raw.githubusercontent.com/jaywong1024/picgo/main/img/image-20230228140746520.png" alt="image-20230228140746520"></p>
+<p><img src="https://raw.githubusercontent.com/jaywong1024/picgo/main/img/image-20230228151005347.png" alt="image-20230228151005347"></p>
+<p>或者执行 <code>javap -verbose Test.class</code> 查看结果（只复制常量池部分）</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">Constant pool:</span><br><span class="line">   <span class="comment">#1 = Methodref          #10.#33        // java/lang/Object."&lt;init&gt;":()V</span></span><br><span class="line">   <span class="comment">#2 = Fieldref           #8.#34         // top/hanjie/jvm/classinfo/Test.test:Ltop/hanjie/jvm/classinfo/Test;</span></span><br><span class="line">   <span class="comment">#3 = Methodref          #8.#35         // top/hanjie/jvm/classinfo/Test.a:()I</span></span><br><span class="line">   <span class="comment">#4 = Fieldref           #36.#37        // java/lang/System.out:Ljava/io/PrintStream;</span></span><br><span class="line">   <span class="comment">#5 = Methodref          #38.#39        // java/io/PrintStream.println:(I)V</span></span><br><span class="line">   <span class="comment">#6 = Methodref          #8.#40         // top/hanjie/jvm/classinfo/Test.b:()I</span></span><br><span class="line">   <span class="comment">#7 = Methodref          #8.#41         // top/hanjie/jvm/classinfo/Test.c:()I</span></span><br><span class="line">   <span class="comment">#8 = Class              #42            // top/hanjie/jvm/classinfo/Test</span></span><br><span class="line">   <span class="comment">#9 = Methodref          #8.#33         // top/hanjie/jvm/classinfo/Test."&lt;init&gt;":()V</span></span><br><span class="line">  <span class="comment">#10 = Class              #43            // java/lang/Object</span></span><br><span class="line">  <span class="comment">#11 = Class              #44            // top/hanjie/jvm/classinfo/TestApi</span></span><br><span class="line">  <span class="comment">#12 = Utf8               test</span></span><br><span class="line">  <span class="comment">#13 = Utf8               Ltop/hanjie/jvm/classinfo/Test;</span></span><br><span class="line">  <span class="comment">#14 = Utf8               &lt;init&gt;</span></span><br><span class="line">  <span class="comment">#15 = Utf8               ()V</span></span><br><span class="line">  <span class="comment">#16 = Utf8               Code</span></span><br><span class="line">  <span class="comment">#17 = Utf8               LineNumberTable</span></span><br><span class="line">  <span class="comment">#18 = Utf8               LocalVariableTable</span></span><br><span class="line">  <span class="comment">#19 = Utf8               this</span></span><br><span class="line">  <span class="comment">#20 = Utf8               main</span></span><br><span class="line">  <span class="comment">#21 = Utf8               ([Ljava/lang/String;)V</span></span><br><span class="line">  <span class="comment">#22 = Utf8               args</span></span><br><span class="line">  <span class="comment">#23 = Utf8               [Ljava/lang/String;</span></span><br><span class="line">  <span class="comment">#24 = Utf8               a</span></span><br><span class="line">  <span class="comment">#25 = Utf8               I</span></span><br><span class="line">  <span class="comment">#26 = Utf8               MethodParameters</span></span><br><span class="line">  <span class="comment">#27 = Utf8               ()I</span></span><br><span class="line">  <span class="comment">#28 = Utf8               b</span></span><br><span class="line">  <span class="comment">#29 = Utf8               c</span></span><br><span class="line">  <span class="comment">#30 = Utf8               &lt;clinit&gt;</span></span><br><span class="line">  <span class="comment">#31 = Utf8               SourceFile</span></span><br><span class="line">  <span class="comment">#32 = Utf8               Test.java</span></span><br><span class="line">  <span class="comment">#33 = NameAndType        #14:#15        // "&lt;init&gt;":()V</span></span><br><span class="line">  <span class="comment">#34 = NameAndType        #12:#13        // test:Ltop/hanjie/jvm/classinfo/Test;</span></span><br><span class="line">  <span class="comment">#35 = NameAndType        #24:#27        // a:()I</span></span><br><span class="line">  <span class="comment">#36 = Class              #45            // java/lang/System</span></span><br><span class="line">  <span class="comment">#37 = NameAndType        #46:#47        // out:Ljava/io/PrintStream;</span></span><br><span class="line">  <span class="comment">#38 = Class              #48            // java/io/PrintStream</span></span><br><span class="line">  <span class="comment">#39 = NameAndType        #49:#50        // println:(I)V</span></span><br><span class="line">  <span class="comment">#40 = NameAndType        #28:#27        // b:()I</span></span><br><span class="line">  <span class="comment">#41 = NameAndType        #29:#27        // c:()I</span></span><br><span class="line">  <span class="comment">#42 = Utf8               top/hanjie/jvm/classinfo/Test</span></span><br><span class="line">  <span class="comment">#43 = Utf8               java/lang/Object</span></span><br><span class="line">  <span class="comment">#44 = Utf8               top/hanjie/jvm/classinfo/TestApi</span></span><br><span class="line">  <span class="comment">#45 = Utf8               java/lang/System</span></span><br><span class="line">  <span class="comment">#46 = Utf8               out</span></span><br><span class="line">  <span class="comment">#47 = Utf8               Ljava/io/PrintStream;</span></span><br><span class="line">  <span class="comment">#48 = Utf8               java/io/PrintStream</span></span><br><span class="line">  <span class="comment">#49 = Utf8               println</span></span><br><span class="line">  <span class="comment">#50 = Utf8               (I)V</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="1-4-访问标志（2个字节）"><a href="#1-4-访问标志（2个字节）" class="headerlink" title="1.4 访问标志（2个字节）"></a>1.4 访问标志（2个字节）</h3><p>找到 <code>Test.class</code> 字节码文件中最后一个常量，在 <code>000001f8</code> 行的 <code>01 0004 28492956</code> 中，表示一个 UTF-8 字符串，长度为 4，16 进制 <code>28492956</code> 转译字符串为 <code>(I)V</code>。</p>
+<p>紧接着在它后面的就是访问标志 <code>0021</code>（由多个标志值进行相加运算），例如 <code>0x0021 = 0x0001 + 0x0020</code>，它代表 <code>Test</code> 类的访问标志为 <code>public</code></p>
+<table>
+<thead>
+<tr>
+<th>标志名称</th>
+<th>标志值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ACC_PUBLIC</td>
+<td>0x0001</td>
+<td>是否被 public 修饰</td>
+</tr>
+<tr>
+<td>ACC_FINAL</td>
+<td>0x0010</td>
+<td>是否被 final 修饰</td>
+</tr>
+<tr>
+<td>ACC_SUPER</td>
+<td>0x0020</td>
+<td>是否允许使用 invokespecial 字节码指令的新语意，invokespecial 指令的语意在 JDK 1.0.2 发生过改变，为了区别这条指令使用哪种语意，JDK 1.0.2 之后编译出来的类的这个标志都必须为真</td>
+</tr>
+<tr>
+<td>ACC_INTERFACE</td>
+<td>0x0200</td>
+<td>标识这是一个接口</td>
+</tr>
+<tr>
+<td>ACC_ABSTRACT</td>
+<td>0x0400</td>
+<td>是否为 abstract 类型，对于接口或者抽象类来说，此标志值为真，其他类值为假</td>
+</tr>
+<tr>
+<td>ACC_SYNTHETIC</td>
+<td>0x1000</td>
+<td>标识这个类并非由用户代码产生的</td>
+</tr>
+<tr>
+<td>ACC_ANNOTION</td>
+<td>0x2000</td>
+<td>标识这是一个注解</td>
+</tr>
+<tr>
+<td>ACC_ENUM</td>
+<td>0x4000</td>
+<td>标识这是一个枚举</td>
+</tr>
+<tr>
+<td>ACC_MODULE</td>
+<td>0x8000</td>
+<td>标识这是一个模块</td>
+</tr>
+</tbody></table>
+<h3 id="1-5-类信息（4个字节）"><a href="#1-5-类信息（4个字节）" class="headerlink" title="1.5 类信息（4个字节）"></a>1.5 类信息（4个字节）</h3><p>紧接着访问标志的就是类信息（本类和父类），<code>Test.class</code> 中为 <code>0008 000a</code> 分别指向常量 <strong>#8 -&gt; #42</strong> 和 <strong>#10 -&gt; #43</strong>，<strong>#42</strong> 本类为 <code>top/hanjie/jvm/classinfo/Test</code>，<strong>#43</strong> 父类为 <code>java/lang/Object</code></p>
+<h3 id="1-6-接口（N个字节）"><a href="#1-6-接口（N个字节）" class="headerlink" title="1.6 接口（N个字节）"></a>1.6 接口（N个字节）</h3><p>类信息后 2 个字节储存着接口计数（interfaces_count），它用于描述类实现的接口数量，<code>Test.class</code> 中为 1 个，它的值就在后面 <code>000b -&gt; #11 -&gt; #44</code> 为 <code>top/hanjie/jvm/classinfo/TestApi</code></p>
+<h3 id="1-7-字段（N个字节）"><a href="#1-7-字段（N个字节）" class="headerlink" title="1.7 字段（N个字节）"></a>1.7 字段（N个字节）</h3><h4 id="1-7-1-字段计数（2个字节）"><a href="#1-7-1-字段计数（2个字节）" class="headerlink" title="1.7.1 字段计数（2个字节）"></a>1.7.1 字段计数（2个字节）</h4><p>接口信息后 2 个字节储存着字段计数（fields_count），它用于描述字段的数量，<code>Test.class</code> 中为 1 个</p>
+<h4 id="1-7-2-字段结构（8个字节）"><a href="#1-7-2-字段结构（8个字节）" class="headerlink" title="1.7.2 字段结构（8个字节）"></a>1.7.2 字段结构（8个字节）</h4><p>字段结构使用 8 个固定的字节来描述，在 <code>Test.class</code> 中，<code>001a 000c 000d 0000</code> 就是它的唯一字段</p>
+<ul>
+<li>字段访问标志 <code>001a = 0x0002 + 0x0008 + 0x0010 = private static final</code></li>
+<li>字段名称 <code>000c -&gt; #12 -&gt; test</code></li>
+<li>描述符 <code>000d -&gt; #13 -&gt; Ltop/hanjie/jvm/classinfo/Test;</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>名称</th>
+<th>数量</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>u2</td>
+<td>access_flags</td>
+<td>1</td>
+<td>字段访问标志</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>name_index</td>
+<td>1</td>
+<td>字段名称</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>descriptor_index</td>
+<td>1</td>
+<td>字段和方法的描述符</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>attributes_count</td>
+<td>1</td>
+<td>字段没有附加属性（所以为 0）</td>
+</tr>
+<tr>
+<td>attribute_info</td>
+<td>attributes</td>
+<td>attributes_count</td>
+<td>无</td>
+</tr>
+</tbody></table>
+<h4 id="1-7-3-字段访问标志"><a href="#1-7-3-字段访问标志" class="headerlink" title="1.7.3 字段访问标志"></a>1.7.3 字段访问标志</h4><table>
+<thead>
+<tr>
+<th>标志名称</th>
+<th>标志值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ACC_PUBLIC</td>
+<td>0x0001</td>
+<td>字段是否被 public 修饰</td>
+</tr>
+<tr>
+<td>ACC_PRIVATE</td>
+<td>0x0002</td>
+<td>字段是否被 private 修饰</td>
+</tr>
+<tr>
+<td>ACC_PROTECTED</td>
+<td>0x0004</td>
+<td>字段是否被 protected 修饰</td>
+</tr>
+<tr>
+<td>ACC_STATIC</td>
+<td>0x0008</td>
+<td>字段是否被 static 修饰</td>
+</tr>
+<tr>
+<td>ACC_FINAL</td>
+<td>0x0010</td>
+<td>字段是否被 final 修饰</td>
+</tr>
+<tr>
+<td>ACC_VOLATILE</td>
+<td>0x0040</td>
+<td>字段是否被 volatile 修饰</td>
+</tr>
+<tr>
+<td>ACC_TRANSIENT</td>
+<td>0x0080</td>
+<td>字段是否被 transient 修饰</td>
+</tr>
+</tbody></table>
+<h3 id="1-8-方法（N个字节）"><a href="#1-8-方法（N个字节）" class="headerlink" title="1.8 方法（N个字节）"></a>1.8 方法（N个字节）</h3><h4 id="1-8-1-方法计数（2个字节）"><a href="#1-8-1-方法计数（2个字节）" class="headerlink" title="1.8.1 方法计数（2个字节）"></a>1.8.1 方法计数（2个字节）</h4><p>字段信息后 2 个字节储存着方法计数（methods_count），它用于描述字段的数量，<code>Test.class</code> 中为 6 个</p>
+<h4 id="1-8-2-方法结构"><a href="#1-8-2-方法结构" class="headerlink" title="1.8.2 方法结构"></a>1.8.2 方法结构</h4><p>方法结构使用 8 个固定的字节来和动态字节的属性集合描述，在 <code>Test.class</code> 中分别为</p>
+<ul>
+<li><init>：构造方法</init></li>
+<li>main：主方法</li>
+<li>a：普通方法</li>
+<li>b：普通方法</li>
+<li>c：普通方法</li>
+<li><clinit>：优先于构造方法，在类加载后调用</clinit></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>名称</th>
+<th>数量</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>u2</td>
+<td>access_flags</td>
+<td>1</td>
+<td>方法访问标志</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>name_index</td>
+<td>1</td>
+<td>方法名称</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>descriptor_index</td>
+<td>1</td>
+<td>字段和方法的描述符</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>attributes_count</td>
+<td>1</td>
+<td>方法中包含属性数量</td>
+</tr>
+<tr>
+<td>attribute_info</td>
+<td>attributes</td>
+<td>attributes_count</td>
+<td>属性有代码、参数等</td>
+</tr>
+</tbody></table>
+<h4 id="1-8-3-方法访问标志"><a href="#1-8-3-方法访问标志" class="headerlink" title="1.8.3 方法访问标志"></a>1.8.3 方法访问标志</h4><table>
+<thead>
+<tr>
+<th>ACC_PUBLIC</th>
+<th>0x0001</th>
+<th>字段是否被 public 修饰</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ACC_PRIVATE</td>
+<td>0x0002</td>
+<td>方法是否被 private 修饰</td>
+</tr>
+<tr>
+<td>ACC_PROTECTED</td>
+<td>0x0004</td>
+<td>方法是否被 protected 修饰</td>
+</tr>
+<tr>
+<td>ACC_STATIC</td>
+<td>0x0008</td>
+<td>方法是否被 static 修饰</td>
+</tr>
+<tr>
+<td>ACC_FINAL</td>
+<td>0x0010</td>
+<td>方法是否被 final 修饰</td>
+</tr>
+<tr>
+<td>ACC_ABSTRACT</td>
+<td>0x0400</td>
+<td>方法是否被 abstract 修饰</td>
+</tr>
+</tbody></table>
+<h3 id="1-9-属性（N个字节）"><a href="#1-9-属性（N个字节）" class="headerlink" title="1.9 属性（N个字节）"></a>1.9 属性（N个字节）</h3><h4 id="1-9-1-属性计数（2个字节）"><a href="#1-9-1-属性计数（2个字节）" class="headerlink" title="1.9.1 属性计数（2个字节）"></a>1.9.1 属性计数（2个字节）</h4><p>方法信息后 2 个字节储存着属性计数（attributes_count），它用于描述字段的数量，<code>Test.class</code> 中为 1 个</p>
+<h4 id="1-9-2-属性结构"><a href="#1-9-2-属性结构" class="headerlink" title="1.9.2 属性结构"></a>1.9.2 属性结构</h4><table>
+<thead>
+<tr>
+<th>属性名称</th>
+<th>使用位置</th>
+<th>含 义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Code</td>
+<td>方法表</td>
+<td>Java 代码编译成的字节码指令</td>
+</tr>
+<tr>
+<td>Constant Value</td>
+<td>字段表</td>
+<td>final 关键字定义的常量值</td>
+</tr>
+<tr>
+<td>Deprecated</td>
+<td>类、方法表、字段表</td>
+<td>被声明为 deprecated 的方法和字段</td>
+</tr>
+<tr>
+<td>Exceptions</td>
+<td>方法表</td>
+<td>方法抛出的异常</td>
+</tr>
+<tr>
+<td>EnclosingMethod</td>
+<td>类文件</td>
+<td>仅当一个类为局部类或者匿名类时才能拥有这个属性，这个属性用于标识这个类所在的外围方法</td>
+</tr>
+<tr>
+<td>InnerClasses</td>
+<td>类文件</td>
+<td>内部类列表</td>
+</tr>
+<tr>
+<td>LineNumberTable</td>
+<td>Code 属性</td>
+<td>Java 源码的行号与字节码指令的对应关系</td>
+</tr>
+<tr>
+<td>LocalVariableTable</td>
+<td>Code属性</td>
+<td>方法的局部变量描述</td>
+</tr>
+<tr>
+<td>StackMapTable</td>
+<td>Code属性</td>
+<td>JDK 6 中新增的属性，供新的类型检查验证器（Type Checker）检查和处理目标方法的局部变量和操作数栈所需要的类型是否匹配</td>
+</tr>
+<tr>
+<td>Signature</td>
+<td>类、方法表、字段表</td>
+<td>JDK 5 中新增的属性，这个属性用于支持泛型情况下的方法签名，在Java 语言中，任何类、接口、初始化方法或成员的泛型签名如果包含了类型 变量（Type Variables）或参数化类型（Parameterized Types），则 Signature 属性会为它记录泛型签名信息。 由于 Java 的泛型采用擦除法实现，在为了避免类型信息被擦除后导致签名混乱，需要这个属性记录泛型中的相关信息</td>
+</tr>
+<tr>
+<td>SourceFile</td>
+<td>类文件</td>
+<td>记录源文件名称</td>
+</tr>
+<tr>
+<td>SourceDebugExtension</td>
+<td>类文件</td>
+<td>JDK 1．6中新增的属性，SourceDebugExtension属 性用于存储额外的调试信息。譬如在进行JSP文件调 试时，无法通过 Java 堆栈来定位到JSP文件的行号， JSR-45规范为这些非Java 语言编写，却需要编译成 字节码并运行在Java虚拟机中的程序提供了一个进 行调试的标准机制，使用 SourceDebugExtension 属性 就可以用于存储这个标准所新加入的调试信息</td>
+</tr>
+<tr>
+<td>Synthetic</td>
+<td>类、方法表、字段表</td>
+<td>标识方法或字段为编译器自动生成的</td>
+</tr>
+<tr>
+<td>LocalVariableTypeTable</td>
+<td>类</td>
+<td>JDK 5 中新增的属性，它使用特征签名代替描述符，是为了引入泛型语法之后能描述泛型参数化类型而添加</td>
+</tr>
+<tr>
+<td>RuntimeVisibleAnnotations</td>
+<td>类、方法表、字段表</td>
+<td>JDK 5 中新增的属性，为动态注解提供支持。 RuntimeVisibleAnnotations 属性用于指明哪些注解是运行时（实际上运行时就是进行反射调用）可见的</td>
+</tr>
+<tr>
+<td>RuntimelnvisibleAnnotations</td>
+<td>类、方法表、字段表</td>
+<td>JDK 5 中新增的属性，与 RuntimeVisibleAnnotations 属性作用刚好相反，用于指明哪些注解是运行时不可 见的</td>
+</tr>
+<tr>
+<td>RuntimeVisibleParameter Annotations</td>
+<td>方法表</td>
+<td>JDK 5 中新增的属性，作用与RuntimeVisibleAnnotations 属性类似，只不过作用对象为方法参数</td>
+</tr>
+<tr>
+<td>RuntimelnvisibleParameter Annotations</td>
+<td>方法表</td>
+<td>JDK 5 中新增的属性，作用与 RuntimelnvisibleAnnotations 属性类似，只不过作用对象为方法参数</td>
+</tr>
+<tr>
+<td>AnnotationDefault</td>
+<td>方法表</td>
+<td>JDK 5 中新增的属性，用于记录注解类元素的默 认值</td>
+</tr>
+<tr>
+<td>BootstrapMethods</td>
+<td>类文件</td>
+<td>JDK 7 中新增的属性，用于保存 invokedynamic 指令引用的引导方法限定符</td>
+</tr>
+</tbody></table>
+<p>属性结构如上表，在 <code>Test.class</code> 中，为 <code>0000 000c 0001 001f 0000 0002 0020</code>，使用 <strong>jclasslib</strong> 可以看到属性名称为 <code>SourceFile</code>，代表它是用于记录源文件名称的属性，特有信息中记录了源文件名称为 <code>Test.java</code></p>
+<p><img src="https://raw.githubusercontent.com/jaywong1024/picgo/main/img/image-20230228211646407.png" alt="image-20230228211646407"></p>
+<h2 id="二、字节码执行过程"><a href="#二、字节码执行过程" class="headerlink" title="二、字节码执行过程"></a>二、字节码执行过程</h2><p>Java 字节码执行过程可以分为三个阶段：</p>
+<ol>
+<li>加载阶段：Java 虚拟机将字节码文件加载到内存中，并对字节码进行验证、准备和解析</li>
+<li>运行阶段：Java 虚拟机执行字节码文件，并将字节码解释成机器码运行</li>
+<li>卸载阶段：Java 虚拟机在程序执行完成后，释放内存中的字节码文件</li>
+</ol>
+<h3 id="2-1-细节待补充"><a href="#2-1-细节待补充" class="headerlink" title="2.1 细节待补充"></a>2.1 细节待补充</h3><h2 id="三、字节码执行优化"><a href="#三、字节码执行优化" class="headerlink" title="三、字节码执行优化"></a>三、字节码执行优化</h2><p>Java 字节码执行过程中，为了提高程序的执行效率，Java虚拟机采用了一系列的优化措施，包括：</p>
+<ol>
+<li>即时编译（Just-In-Time Compilation，JIT）：Java 虚拟机将频繁执行的字节码编译成本地机器码，提高程序的执行速度</li>
+<li>垃圾回收（Garbage Collection，GC）：Java 虚拟机自动管理内存，释放不再使用的内存空间，避免内存溢出</li>
+<li>类加载优化：Java 虚拟机采用类加载器来加载字节码文件，可以对类加载器进行优化，提高程序的执行效率</li>
+</ol>
+<h3 id="3-1-细节待补充"><a href="#3-1-细节待补充" class="headerlink" title="3.1 细节待补充"></a>3.1 细节待补充</h3><h2 id="四、总结"><a href="#四、总结" class="headerlink" title="四、总结"></a>四、总结</h2><p>Java 字节码执行机制是 Java 程序运行的基础，Java 虚拟机负责将 Java 字节码解释成机器码并执行。为了提高程序的执行效率，Java 虚拟机采用了一系列的优化措施，包括即时编译、垃圾回收和类加载优化等。掌握Java字节码执行机制对于Java程序员来说是非常重要的</p>
+</p></div><div class="post-footer"><div class="meta"><div class="info"><i class="fa fa-sun-o"></i><span class="date">2023-02-23</span><a class="tag" href="/categories/字节码执行机制/" title="字节码执行机制">字节码执行机制 </a><i class="fa fa-tag"></i><a class="tag" href="/tags/【JVM-虚拟机】/" title="【JVM 虚拟机】">【JVM 虚拟机】 </a><span class="leancloud_visitors"></span><span>About 4668 words, 15 min 33 sec  read</span></div></div></div></div><div class="share"><div class="evernote"><a class="fa fa-bookmark" href="" onclick="javascript:join_favorite()" ref="sidebar"></a></div><div class="weibo"><a class="fa fa-weibo" href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));"></a></div><div class="twitter"><a class="fa fa-twitter" href="http://twitter.com/intent/tweet?text=I%20have%20found%20a%20great%20blog.%0A%0AJayWong%20%C2%B7%201.1.2.3%E3%80%90%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80%20-%20Java%20%E8%AF%AD%E8%A8%80%20-%20JVM%20%E8%99%9A%E6%8B%9F%E6%9C%BA%E3%80%91%E5%AD%97%E8%8A%82%E7%A0%81%E6%89%A7%E8%A1%8C%E6%9C%BA%E5%88%B6%0Ahttp://yoursite.com/2023/02/23/1.%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/1.1%20Java%20%E8%AF%AD%E8%A8%80/1.1.2%20JVM%20%E8%99%9A%E6%8B%9F%E6%9C%BA/1.1.2.3%20%E5%AD%97%E8%8A%82%E7%A0%81%E6%89%A7%E8%A1%8C%E6%9C%BA%E5%88%B6/%0A" target="_blank" rel="noopener"></a></div></div><div class="pagination"><ul class="clearfix"><li class="pre pagbuttons"><a class="btn" role="navigation" href="/2023/02/24/1.%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/1.1%20Java%20%E8%AF%AD%E8%A8%80/1.1.2%20JVM%20%E8%99%9A%E6%8B%9F%E6%9C%BA/1.1.2.5%20%E6%80%A7%E8%83%BD%E7%9B%91%E6%8E%A7%E4%B8%8E%E6%95%85%E9%9A%9C%E5%AE%9A%E4%BD%8D/" title="1.1.2.5【编程基础 - Java 语言 - JVM 虚拟机】性能监控与故障定位">Previous</a></li><li class="next pagbuttons"><a class="btn" role="navigation" href="/2023/02/22/1.%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/1.1%20Java%20%E8%AF%AD%E8%A8%80/1.1.2%20JVM%20%E8%99%9A%E6%8B%9F%E6%9C%BA/1.1.2.2%20GC%20%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6/" title="1.1.2.2【编程基础 - Java 语言 - JVM 虚拟机】GC 垃圾回收">Next</a></li></ul></div><script src="/js/visitors.js"></script></div></div></div></div><script src="/js/darkLightToggle.js"></script><script src="/js/jquery-migrate-1.2.1.min.js"></script><script src="/js/jquery.appear.js"></script><script src="/js/add-bookmark.js"></script><script>(function(window){var INSIGHT_CONFIG={TRANSLATION:{POSTS:"Posts",PAGES:"Pages",CATEGORIES:"Categories",TAGS:"Tags",UNTITLED:"(Untitled)",},CONTENT_URL:"/content.json",};window.INSIGHT_CONFIG=INSIGHT_CONFIG})(window);</script><script src="/js/insight.js" defer></script><div class="searchbox ins-search"><div class="searchbox-container ins-search-container"><div class="searchbox-input-wrapper"><input class="searchbox-input ins-search-input" type="text" placeholder="Search..."><span class="searchbox-close"><a class="fa fa-times-circle" onclick="closeWindow();"></a></span></div><div class="searchbox-result-wrapper ins-section-wrapper"><div class="ins-section-container"><p>Seraching...</p></div></div></div></div></body></html>
